@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <title>导航栏 - NavApp</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        header { background: white; padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; gap: 1rem; }
+        header h1 { font-size: 1.25rem; color: #333; white-space: nowrap; position: absolute; left: 2rem; }
+        
+        .header-actions { position: absolute; right: 2rem; display: flex; gap: 0.5rem; align-items: center; }
+        .header-actions button { padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap; }
+        #editModeBtn { background: #4a90d9; color: white; }
+        #editModeBtn:hover { background: #3a7bc8; }
+        .tools-btn { background: transparent; color: #27ae60; border: 1px solid #27ae60; }
+        .tools-btn:hover { background: #27ae60; color: white; }
+        .logout-btn { background: #e74c3c; color: white; }
+        .logout-btn:hover { background: #c0392b; }
+        
+        .engine-settings-btn { 
+            font-size: 18px; 
+            cursor: pointer; 
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            margin-right: 0.25rem;
+            background: none;
+            border: none;
+            padding: 0;
+            outline: none;
+            display: none;
+        }
+        .engine-settings-btn:hover { 
+            opacity: 1;
+        }
+        
+        .search-box { max-width: 600px; display: flex; gap: 0.5rem; align-items: center; }
+        .search-box input { flex: 1; padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 20px; font-size: 14px; outline: none; transition: all 0.2s; }
+        .search-box input:focus { border-color: #4a90d9; box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
+        .search-engine-select { padding: 0.5rem 1rem; border: 1px solid #e0e0e0; border-radius: 20px; font-size: 14px; outline: none; background: white; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-align: center; appearance: none; -webkit-appearance: none; -moz-appearance: none; }
+        .search-engine-select:hover { border-color: #4a90d9; box-shadow: 0 2px 8px rgba(74,144,217,0.15); }
+        .search-engine-select:focus { border-color: #4a90d9; box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
+        
+        .main { display: flex; flex: 1; }
+        
+        .sidebar { width: 240px; background: white; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 1rem; font-weight: 600; color: #333; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-footer { padding: 1rem; border-top: 1px solid #e0e0e0; display: none; }
+        .sidebar-list { flex: 1; overflow-y: auto; }
+        .sidebar-item { padding: 0.75rem 1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; transition: background 0.2s; }
+        .sidebar-item:hover { background: #f5f5f5; }
+        .sidebar-item.active { background: #e3f2fd; border-left: 3px solid #4a90d9; }
+        .sidebar-item-name { font-size: 14px; color: #333; }
+        .sidebar-item-actions { display: none; gap: 0.25rem; }
+        .sidebar-item:hover .sidebar-item-actions { display: flex; }
+        .sidebar-item-actions button { padding: 0.2rem 0.5rem; background: #f0f0f0; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        
+        .content { flex: 1; padding: 2rem; overflow-y: auto; }
+        .content-header { margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; }
+        .content-title { font-size: 1.5rem; font-weight: 600; color: #333; }
+        
+        .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
+        .link-card { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: white; border-radius: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; color: inherit; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .link-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .link-icon { font-size: 1.5rem; width: 1.5rem; height: 1.5rem; object-fit: contain; }
+        .link-info { flex: 1; min-width: 0; }
+        .link-title { font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .link-actions { display: none; gap: 0.25rem; }
+        .link-card:hover .link-actions { display: flex; }
+        .link-actions button { padding: 0.25rem 0.5rem; background: white; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        
+        .add-link-card { display: none; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem; background: white; border: 2px dashed #ddd; border-radius: 8px; cursor: pointer; color: #999; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .add-link-card.show { display: flex; }
+        .add-link-card:hover { border-color: #4a90d9; color: #4a90d9; }
+        
+        .empty-state { text-align: center; padding: 3rem; color: #999; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+        .modal h2 { margin-bottom: 1.5rem; font-size: 1.25rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; color: #666; font-size: 14px; }
+        .form-group input, .form-group select { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
+        .form-group input:focus { border-color: #4a90d9; }
+        .modal-actions { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; }
+        .modal-actions button { padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .modal-actions .cancel { background: #f0f0f0; color: #666; }
+        .modal-actions .submit { background: #4a90d9; color: white; }
+        
+        .engine-list { margin-bottom: 1rem; }
+        .engine-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 0.5rem; }
+        .engine-item-icon { font-size: 1.25rem; }
+        .engine-item-info { flex: 1; }
+        .engine-item-name { font-weight: 500; color: #333; font-size: 14px; }
+        .engine-item-url { font-size: 12px; color: #999; }
+        .engine-item-default { font-size: 11px; color: #4a90d9; background: #e3f2fd; padding: 0.1rem 0.4rem; border-radius: 4px; }
+        .engine-item-actions { display: flex; gap: 0.25rem; }
+        .engine-item-actions button { padding: 0.25rem 0.5rem; background: white; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 11px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>我的导航</h1>
+        <div class="search-box">
+            <button class="engine-settings-btn" onclick="openEngineModal()" title="管理搜索引擎">⚙️</button>
+            <select class="search-engine-select" id="engineSelect"></select>
+            <input type="text" id="searchInput" placeholder="输入搜索内容..." onkeydown="if(event.key==='Enter')doSearch()">
+        </div>
+        <div class="header-actions">
+            <button class="tools-btn" onclick="window.location.href='/tools'">🛠️ IT 工具</button>
+            <button id="editModeBtn" onclick="toggleEditMode()">编辑模式</button>
+            <button class="logout-btn" onclick="logout()">退出登录</button>
+        </div>
+    </header>
+    
+    <div class="main">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <span>分类</span>
+                <button id="addCatBtn" onclick="openCategoryModal()" style="display: none; padding: 0.25rem 0.5rem; background: #4a90d9; font-size: 12px;">+</button>
+            </div>
+            <div class="sidebar-list" id="sidebarList"></div>
+        </div>
+        
+        <div class="content" id="content">
+            <div class="empty-state">请选择一个分类</div>
+        </div>
+    </div>
+
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <h2 id="categoryModalTitle">添加分类</h2>
+            <form id="categoryForm">
+                <input type="hidden" id="categoryId">
+                <div class="form-group">
+                    <label>分类名称</label>
+                    <input type="text" id="categoryName" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="cancel" onclick="closeModal('categoryModal')">取消</button>
+                    <button type="submit" class="submit">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="linkModal">
+        <div class="modal-content">
+            <h2 id="linkModalTitle">添加链接</h2>
+            <form id="linkForm">
+                <input type="hidden" id="linkId">
+                <div class="form-group">
+                    <label>所属分类</label>
+                    <select id="linkCategory" required></select>
+                </div>
+                <div class="form-group">
+                    <label>标题</label>
+                    <input type="text" id="linkTitle" required>
+                </div>
+                <div class="form-group">
+                    <label>网址</label>
+                    <input type="url" id="linkUrl" required>
+                </div>
+                <div class="form-group">
+                    <label>图标 (emoji)</label>
+                    <input type="text" id="linkIcon" value="🔗">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="cancel" onclick="closeModal('linkModal')">取消</button>
+                    <button type="submit" class="submit">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="engineModal">
+        <div class="modal-content">
+            <h2>管理搜索引擎</h2>
+            <div class="engine-list" id="engineList"></div>
+            <form id="engineForm">
+                <input type="hidden" id="engineId">
+                <div class="form-group">
+                    <label>引擎名称</label>
+                    <input type="text" id="engineName" required>
+                </div>
+                <div class="form-group">
+                    <label>搜索 URL (用 {q} 代替关键词)</label>
+                    <input type="text" id="engineUrl" placeholder="https://www.google.com/search?q={q}" required>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="engineDefault" style="width: auto;"> 设为默认引擎
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="cancel" onclick="closeModal('engineModal')">取消</button>
+                    <button type="submit" class="submit">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+
+        let categories = [];
+        let searchEngines = [];
+        let editMode = false;
+        let activeCategoryId = null;
+
+        function toggleEditMode() {
+            editMode = !editMode;
+            const btn = document.getElementById('editModeBtn');
+            btn.textContent = editMode ? '显示模式' : '编辑模式';
+            btn.style.background = editMode ? '#27ae60' : '#4a90d9';
+            document.getElementById('addCatBtn').style.display = editMode ? 'block' : 'none';
+            
+            // 控制设置图标显示/隐藏
+            const settingsIcon = document.querySelector('.engine-settings-btn');
+            if (settingsIcon) {
+                settingsIcon.style.display = editMode ? 'inline-block' : 'none';
+            }
+            
+            // 控制 IT 工具按钮显示/隐藏
+            const toolsBtn = document.querySelector('.tools-btn');
+            if (toolsBtn) {
+                toolsBtn.style.display = editMode ? 'none' : 'block';
+            }
+            
+            renderSidebar();
+            renderContent();
+        }
+
+        async function api(url, options = {}) {
+            const res = await fetch(url, { ...options, headers: { ...options.headers, 'Authorization': `Bearer ${token}` } });
+            if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
+            return res.json();
+        }
+
+        async function loadData() {
+            categories = await api('/api/categories');
+            searchEngines = await api('/api/engines');
+            if (searchEngines.length === 0) {
+                await api('/api/engines/init-default', { method: 'POST' });
+                searchEngines = await api('/api/engines');
+            }
+            renderEngineSelect();
+            if (categories.length > 0 && !activeCategoryId) {
+                activeCategoryId = categories[0].id;
+            }
+            renderSidebar();
+            renderContent();
+        }
+
+        function renderEngineSelect() {
+            const select = document.getElementById('engineSelect');
+            select.innerHTML = searchEngines.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+            const defaultEngine = searchEngines.find(e => e.is_default);
+            if (defaultEngine) {
+                select.value = defaultEngine.id;
+            }
+        }
+
+        function getDomain(url) {
+            try {
+                return new URL(url).hostname;
+            } catch {
+                return '';
+            }
+        }
+
+        function getFavicon(url) {
+            const domain = getDomain(url);
+            return domain ? `https://favicon.im/${domain}` : '';
+        }
+
+        function doSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
+            const engineId = parseInt(document.getElementById('engineSelect').value);
+            const engine = searchEngines.find(e => e.id === engineId);
+            if (engine) {
+                const url = engine.url.replace('{q}', encodeURIComponent(query));
+                window.open(url, '_blank');
+            }
+        }
+
+        function renderEngineList() {
+            const list = document.getElementById('engineList');
+            list.innerHTML = searchEngines.map(e => `
+                <div class="engine-item">
+                    <div class="engine-item-info">
+                        <div class="engine-item-name">${e.name} ${e.is_default ? '<span class="engine-item-default">默认</span>' : ''}</div>
+                        <div class="engine-item-url">${e.url}</div>
+                    </div>
+                    <div class="engine-item-actions">
+                        <button onclick="openEngineModal(${e.id}, '${e.name}', '${e.url}', ${e.is_default})">编辑</button>
+                        <button onclick="deleteEngine(${e.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSidebar() {
+            const list = document.getElementById('sidebarList');
+            list.innerHTML = categories.map(cat => `
+                <div class="sidebar-item ${cat.id === activeCategoryId ? 'active' : ''}" onclick="setActiveCategory(${cat.id})">
+                    <span class="sidebar-item-name">${cat.name}</span>
+                    <div class="sidebar-item-actions" style="display: ${editMode ? 'flex' : 'none'}" onclick="event.stopPropagation()">
+                        <button onclick="openCategoryModal(${cat.id}, '${cat.name}')">编辑</button>
+                        <button onclick="deleteCategory(${cat.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderContent() {
+            const container = document.getElementById('content');
+            const category = categories.find(c => c.id === activeCategoryId);
+            
+            if (!category) {
+                container.innerHTML = '<div class="empty-state">请选择一个分类</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="content-header">
+                    <h2 class="content-title">${category.name}</h2>
+                </div>
+                <div class="links-grid">
+                    ${category.links.map(link => {
+                        const isImage = link.icon && link.icon.startsWith('http');
+                        return `
+                        <a href="${link.url}" target="_blank" class="link-card">
+                            ${isImage ? `<img class="link-icon" src="${link.icon}" onerror="this.onerror=null;this.src='';this.style.display='none';this.nextElementSibling.style.display='inline';">` : ''}<span class="link-icon" style="display: ${isImage ? 'none' : 'inline'}">${link.icon || '🔗'}</span>
+                            <div class="link-info">
+                                <div class="link-title">${link.title}</div>
+                            </div>
+                            <div class="link-actions" onclick="event.preventDefault()" style="display: ${editMode ? 'flex' : 'none'}">
+                                <button onclick="openLinkModal(${link.id}, ${link.category_id}, '${link.title}', '${link.url}', '${link.icon || ''}')">编辑</button>
+                                <button onclick="deleteLink(${link.id})">删除</button>
+                            </div>
+                        </a>
+                    `}).join('')}
+                    <div class="add-link-card ${editMode ? 'show' : ''}" onclick="openLinkModal(null, ${category.id})">
+                        <span>+</span> 添加链接
+                    </div>
+                </div>
+            `;
+        }
+
+        function setActiveCategory(id) {
+            activeCategoryId = id;
+            renderSidebar();
+            renderContent();
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        function openCategoryModal(id = null, name = '') {
+            document.getElementById('categoryId').value = id || '';
+            document.getElementById('categoryName').value = name;
+            document.getElementById('categoryModalTitle').textContent = id ? '编辑分类' : '添加分类';
+            openModal('categoryModal');
+        }
+
+        function openLinkModal(id = null, categoryId = '', title = '', url = '', icon = '') {
+            document.getElementById('linkId').value = id || '';
+            document.getElementById('linkCategory').innerHTML = categories.map(c => `<option value="${c.id}" ${c.id === categoryId ? 'selected' : ''}>${c.name}</option>`).join('');
+            document.getElementById('linkTitle').value = title;
+            document.getElementById('linkUrl').value = url;
+            document.getElementById('linkIcon').value = icon || '🔗';
+            document.getElementById('linkModalTitle').textContent = id ? '编辑链接' : '添加链接';
+            openModal('linkModal');
+        }
+
+        function openEngineModal(id = null, name = '', url = '', isDefault = false) {
+            document.getElementById('engineId').value = id || '';
+            document.getElementById('engineName').value = name;
+            document.getElementById('engineUrl').value = url;
+            document.getElementById('engineDefault').checked = isDefault;
+            renderEngineList();
+            openModal('engineModal');
+        }
+
+        document.getElementById('categoryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('categoryId').value;
+            const name = document.getElementById('categoryName').value;
+            if (id) {
+                await api(`/api/categories/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+            } else {
+                const newCat = await api('/api/categories', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, sort_order: 0 }) });
+                activeCategoryId = newCat.id;
+            }
+            closeModal('categoryModal');
+            loadData();
+        });
+
+        document.getElementById('linkForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('linkId').value;
+            const category_id = parseInt(document.getElementById('linkCategory').value);
+            const title = document.getElementById('linkTitle').value;
+            const url = document.getElementById('linkUrl').value;
+            let icon = document.getElementById('linkIcon').value;
+            
+            // 新增链接时始终尝试获取 favicon，编辑时仅在图标为空或默认时获取
+            if (!id) {
+                icon = getFavicon(url) || icon || '🔗';
+            } else if (!icon || icon === '🔗') {
+                icon = getFavicon(url) || '🔗';
+            }
+            
+            if (id) {
+                await api(`/api/links/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category_id, title, url, icon }) });
+            } else {
+                await api('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category_id, title, url, icon, sort_order: 0 }) });
+            }
+            closeModal('linkModal');
+            loadData();
+        });
+
+        document.getElementById('engineForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('engineId').value;
+            const name = document.getElementById('engineName').value;
+            const url = document.getElementById('engineUrl').value;
+            const is_default = document.getElementById('engineDefault').checked;
+            if (id) {
+                await api(`/api/engines/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, url, is_default }) });
+            } else {
+                await api('/api/engines', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, url, is_default, sort_order: searchEngines.length }) });
+            }
+            closeModal('engineModal');
+            loadData();
+        });
+
+        async function deleteCategory(id) {
+            if (!confirm('确定删除该分类吗?')) return;
+            await api(`/api/categories/${id}`, { method: 'DELETE' });
+            if (activeCategoryId === id) activeCategoryId = null;
+            loadData();
+        }
+
+        async function deleteLink(id) {
+            if (!confirm('确定删除该链接吗?')) return;
+            await api(`/api/links/${id}`, { method: 'DELETE' });
+            loadData();
+        }
+
+        async function deleteEngine(id) {
+            if (!confirm('确定删除该搜索引擎吗?')) return;
+            await api(`/api/engines/${id}`, { method: 'DELETE' });
+            loadData();
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

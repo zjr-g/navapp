@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <title>IT 工具 - NavApp</title>
+    <script src="/static/crypto-js.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        header { background: white; padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; position: relative; }
+        header h1 { font-size: 1.25rem; color: #333; white-space: nowrap; }
+        .header-back-btn { position: absolute; right: 2rem; padding: 0.5rem 1rem; background: transparent; color: #27ae60; border: 1px solid #27ae60; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .header-back-btn:hover { background: #27ae60; color: white; }
+        
+        .main { display: flex; flex: 1; }
+        
+        .sidebar { width: 240px; background: white; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 1rem; font-weight: 600; color: #333; }
+        .sidebar-list { flex: 1; overflow-y: auto; }
+        
+        .category-item { cursor: pointer; }
+        .category-header { padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; transition: background 0.2s; font-weight: 500; color: #333; }
+        .category-header:hover { background: #f5f5f5; }
+        .category-header .arrow { transition: transform 0.2s; font-size: 12px; color: #999; }
+        .category-header.collapsed .arrow { transform: rotate(-90deg); }
+        .category-tools { max-height: 500px; overflow: hidden; transition: max-height 0.3s; }
+        .category-tools.collapsed { max-height: 0; }
+        
+        .tool-item { padding: 0.6rem 1rem 0.6rem 2rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #f8f8f8; transition: background 0.2s; font-size: 13px; color: #555; }
+        .tool-item:hover { background: #f5f5f5; }
+        .tool-item.active { background: #e3f2fd; color: #4a90d9; border-left: 3px solid #4a90d9; padding-left: calc(2rem - 3px); }
+        .tool-item .icon { font-size: 16px; }
+        
+        .content { flex: 1; padding: 2rem; overflow-y: auto; }
+        .tool-container { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .tool-title { font-size: 1.25rem; font-weight: 600; color: #333; margin-bottom: 1rem; }
+        
+        .tool-area { display: flex; gap: 1rem; margin-bottom: 1rem; }
+        .tool-area > div { flex: 1; display: flex; flex-direction: column; position: relative; }
+        .tool-area label { font-size: 14px; color: #666; margin-bottom: 0.5rem; font-weight: 500; }
+        .tool-area textarea { flex: 1; min-height: 150px; padding: 0.75rem 3rem 0.75rem 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: monospace; resize: none; outline: none; }
+        .tool-area textarea:focus { border-color: #4a90d9; }
+        .tool-area .copy-icon { position: absolute; right: 10px; top: 30px; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; font-size: 16px; }
+        .tool-area .copy-icon:hover { opacity: 1; }
+        
+        .encode-select-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 0.5rem; }
+        .encode-select-container label { font-size: 12px; color: #666; font-weight: 600; margin-bottom: 0.5rem; white-space: nowrap; }
+        .encode-select { padding: 0.75rem 1.5rem; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; cursor: pointer; background: white; }
+        .encode-select:focus { border-color: #4a90d9; }
+        
+        .tool-actions { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem; flex-wrap: wrap; }
+        .tool-actions button { padding: 0.5rem 1.5rem; background: #4a90d9; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+        .tool-actions button:hover { background: #3a7bc8; }
+        .tool-actions button.secondary { background: #6c757d; }
+        .tool-actions button.secondary:hover { background: #5a6268; }
+        
+        .hash-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 1rem; }
+        .hash-item { position: relative; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 1rem; border-radius: 8px; }
+        .hash-item label { font-size: 12px; color: #666; font-weight: 600; white-space: nowrap; margin-right: 0.5rem; }
+        .hash-item .hash-value { font-family: monospace; font-size: 12px; color: #333; word-break: break-all; background: white; padding: 0.5rem; border-radius: 4px; flex: 1; }
+        .hash-item .copy-icon { cursor: pointer; opacity: 0.5; transition: opacity 0.2s; font-size: 16px; margin-left: 0.5rem; }
+        .hash-item .copy-icon:hover { opacity: 1; }
+        
+        .base-results { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; margin-top: 1rem; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .base-item { display: flex; align-items: center; gap: 1rem; background: #f8f9fa; padding: 0.75rem 1rem; border-radius: 8px; width: 100%; justify-content: space-between; }
+        .base-item label { font-size: 12px; color: #666; font-weight: 600; white-space: nowrap; }
+        .base-item .base-value { font-family: monospace; font-size: 13px; color: #333; flex: 1; text-align: right; word-break: break-all; }
+        .base-item .copy-icon { cursor: pointer; opacity: 0.5; transition: opacity 0.2s; font-size: 16px; margin-left: 0.5rem; }
+        .base-item .copy-icon:hover { opacity: 1; }
+        
+        .aes-key-input { margin-bottom: 1rem; }
+        .aes-key-input label { font-size: 14px; color: #666; margin-bottom: 0.5rem; display: block; font-weight: 500; }
+        .aes-key-input input { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; font-family: monospace; }
+        .aes-key-input input:focus { border-color: #4a90d9; }
+        
+        .base-inputs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .base-input-item { position: relative; display: flex; flex-direction: column; }
+        .base-input-item label { font-size: 12px; color: #666; font-weight: 600; margin-bottom: 0.5rem; }
+        .base-input-item input { width: 100%; padding: 0.75rem 3.5rem 0.75rem 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: monospace; outline: none; }
+        .base-input-item input:focus { border-color: #4a90d9; }
+        .base-input-item .prefix-btn { position: absolute; right: 35px; top: 28px; padding: 0.25rem 0.5rem; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+        .base-input-item .prefix-btn:hover { background: #e0e0e0; }
+        .base-input-item .copy-icon { position: absolute; right: 8px; top: 28px; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; font-size: 16px; }
+        .base-input-item .copy-icon:hover { opacity: 1; }
+        
+        .tool-info { font-size: 12px; color: #999; margin-top: 0.5rem; min-height: 20px; }
+        .tool-info.success { color: #27ae60; }
+        .tool-info.error { color: #e74c3c; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1rem; }
+        .stat-card { background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center; }
+        .stat-card .stat-value { font-size: 24px; font-weight: 600; color: #333; margin-bottom: 0.25rem; }
+        .stat-card .stat-label { font-size: 12px; color: #666; }
+        .char-limit-warning { font-size: 12px; color: #f39c12; margin-top: 0.5rem; }
+        .char-limit-error { font-size: 12px; color: #e74c3c; margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>IT 工具</h1>
+        <button class="header-back-btn" onclick="window.location.href='/dashboard'">返回导航</button>
+    </header>
+    
+    <div class="main">
+        <div class="sidebar">
+            <div class="sidebar-header">工具分类</div>
+            <div class="sidebar-list" id="toolList"></div>
+        </div>
+        
+        <div class="content" id="content"></div>
+    </div>
+
+    <script>
+        const toolCategories = [
+            {
+                id: 'format',
+                name: '代码/文本格式化',
+                icon: '📄',
+                tools: [
+                    { id: 'json', name: 'JSON 格式化', icon: '{}' }
+                ]
+            },
+            {
+                id: 'crypto',
+                name: '加密/解密',
+                icon: '🔐',
+                tools: [
+                    { id: 'aes', name: 'AES 加密/解密', icon: '🔑' }
+                ]
+            }
+        ];
+
+        const standaloneTools = [
+            { id: 'base', name: '进制转换器', icon: '🔢' },
+            { id: 'hash', name: 'Hash 计算', icon: '🔏' },
+            { id: 'encode', name: '编码/解码', icon: '📝' },
+            { id: 'textstats', name: '文本统计', icon: '📊' }
+        ];
+
+        const MAX_CHARS = 1000000;
+        const WARN_CHARS = 500000;
+
+        let activeToolId = 'encode';
+        let expandedCategories = { format: true, crypto: true };
+
+        function renderToolList() {
+            const list = document.getElementById('toolList');
+            let html = '';
+            
+            standaloneTools.forEach(tool => {
+                html += `
+                    <div class="tool-item ${tool.id === activeToolId ? 'active' : ''}" onclick="setActiveTool('${tool.id}')" style="padding-left: 1rem;">
+                        <span class="icon">${tool.icon}</span>
+                        <span>${tool.name}</span>
+                    </div>
+                `;
+            });
+            
+            html += toolCategories.map(cat => {
+                const isCollapsed = !expandedCategories[cat.id];
+                return `
+                    <div class="category-item">
+                        <div class="category-header ${isCollapsed ? 'collapsed' : ''}" onclick="toggleCategory('${cat.id}')">
+                            <span>${cat.icon} ${cat.name}</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="category-tools ${isCollapsed ? 'collapsed' : ''}">
+                            ${cat.tools.map(tool => `
+                                <div class="tool-item ${tool.id === activeToolId ? 'active' : ''}" onclick="setActiveTool('${tool.id}')">
+                                    <span class="icon">${tool.icon}</span>
+                                    <span>${tool.name}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            list.innerHTML = html;
+        }
+
+        function toggleCategory(catId) {
+            expandedCategories[catId] = !expandedCategories[catId];
+            renderToolList();
+        }
+
+        function setActiveTool(id) {
+            activeToolId = id;
+            renderToolList();
+            renderContent();
+        }
+
+        function findTool(id) {
+            const standalone = standaloneTools.find(t => t.id === id);
+            if (standalone) return standalone;
+            
+            for (const cat of toolCategories) {
+                const tool = cat.tools.find(t => t.id === id);
+                if (tool) return tool;
+            }
+            return null;
+        }
+
+        function renderContent() {
+            const container = document.getElementById('content');
+            const tool = findTool(activeToolId);
+            
+            if (!tool) return;
+
+            if (activeToolId === 'hash') {
+                container.innerHTML = `
+                    <div class="tool-container">
+                        <h2 class="tool-title">${tool.name}</h2>
+                        <div class="tool-area">
+                            <div style="flex: 1;">
+                                <label>输入</label>
+                                <textarea id="inputArea" placeholder="请输入内容..." style="min-height: 200px;"></textarea>
+                            </div>
+                        </div>
+                        <div class="hash-results" id="hashResults"></div>
+                        <div class="tool-info" id="toolInfo"></div>
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    const input = document.getElementById('inputArea');
+                    let debounceTimer;
+                    input.addEventListener('input', () => {
+                        clearTimeout(debounceTimer);
+                        debounceTimer = setTimeout(calculateHashAuto, 300);
+                    });
+                }, 0);
+            } else if (activeToolId === 'aes') {
+                container.innerHTML = `
+                    <div class="tool-container">
+                        <h2 class="tool-title">${tool.name}</h2>
+                        <div class="aes-key-input">
+                            <label>密钥 (16/24/32 字符)</label>
+                            <input type="text" id="aesKey" placeholder="请输入密钥（16/24/32 字符）" maxlength="32">
+                        </div>
+                        <div class="tool-area">
+                            <div>
+                                <label>输入</label>
+                                <textarea id="inputArea" placeholder="请输入内容..."></textarea>
+                            </div>
+                            <div>
+                                <label>输出</label>
+                                <textarea id="outputArea" placeholder="结果..." readonly></textarea>
+                            </div>
+                        </div>
+                        <div class="tool-actions">
+                            <button onclick="aesEncrypt()">加密 →</button>
+                            <button class="secondary" onclick="aesDecrypt()">← 解密</button>
+                            <button class="secondary" onclick="clearText()">清空</button>
+                            <button class="secondary" onclick="copyOutput()">复制结果</button>
+                        </div>
+                        <div class="tool-info" id="toolInfo"></div>
+                    </div>
+                `;
+            } else if (activeToolId === 'base') {
+                container.innerHTML = `
+                    <div class="tool-container">
+                        <h2 class="tool-title">${tool.name}</h2>
+                        <div class="base-inputs">
+                            <div class="base-input-item">
+                                <label>二进制</label>
+                                <input type="text" id="binInput" placeholder="例如：1010 或 0b1010" spellcheck="false">
+                                <button class="prefix-btn" onclick="togglePrefix('binInput', '0b')">0b</button>
+                                <span class="copy-icon" onclick="copyFromInput('binInput')">📋</span>
+                            </div>
+                            <div class="base-input-item">
+                                <label>八进制</label>
+                                <input type="text" id="octInput" placeholder="例如：12 或 0o12" spellcheck="false">
+                                <button class="prefix-btn" onclick="togglePrefix('octInput', '0o')">0o</button>
+                                <span class="copy-icon" onclick="copyFromInput('octInput')">📋</span>
+                            </div>
+                            <div class="base-input-item">
+                                <label>十进制</label>
+                                <input type="text" id="decInput" placeholder="例如：10" spellcheck="false">
+                                <span class="copy-icon" onclick="copyFromInput('decInput')">📋</span>
+                            </div>
+                            <div class="base-input-item">
+                                <label>十六进制</label>
+                                <input type="text" id="hexInput" placeholder="例如：A 或 0xA" spellcheck="false">
+                                <button class="prefix-btn" onclick="togglePrefix('hexInput', '0x')">0x</button>
+                                <span class="copy-icon" onclick="copyFromInput('hexInput')">📋</span>
+                            </div>
+                        </div>
+                        <div class="tool-info" id="toolInfo" style="text-align: center;"></div>
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    const binInput = document.getElementById('binInput');
+                    const octInput = document.getElementById('octInput');
+                    const decInput = document.getElementById('decInput');
+                    const hexInput = document.getElementById('hexInput');
+                    
+                    let debounceTimer;
+                    
+                    [binInput, octInput, decInput, hexInput].forEach((input, index) => {
+                        input.addEventListener('input', () => {
+                            clearTimeout(debounceTimer);
+                            debounceTimer = setTimeout(() => {
+                                convertFromBase(index, input.value.trim());
+                            }, 300);
+                        });
+                    });
+                }, 0);
+            } else if (activeToolId === 'encode') {
+                container.innerHTML = `
+                    <div class="tool-container">
+                        <h2 class="tool-title">${tool.name}</h2>
+                        <div class="tool-area">
+                            <div>
+                                <label>编码</label>
+                                <textarea id="encodedArea" placeholder="编码后的文本..."></textarea>
+                                <span class="copy-icon" onclick="copyFromTextarea('encodedArea')">📋</span>
+                            </div>
+                            <div class="encode-select-container">
+                                <label>编码方式</label>
+                                <select id="encodeType" class="encode-select" onchange="switchEncodeType()">
+                                    <option value="url">URL</option>
+                                    <option value="base64">Base64</option>
+                                    <option value="html">HTML 实体</option>
+                                    <option value="unicode">Unicode 转义</option>
+                                    <option value="ascii">ASCII 码</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>解码</label>
+                                <textarea id="decodedArea" placeholder="解码后的文本..."></textarea>
+                                <span class="copy-icon" onclick="copyFromTextarea('decodedArea')">📋</span>
+                            </div>
+                        </div>
+                        <div class="tool-info" id="toolInfo"></div>
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    const encodedArea = document.getElementById('encodedArea');
+                    const decodedArea = document.getElementById('decodedArea');
+                    let debounceTimer;
+                    
+                    encodedArea.addEventListener('input', () => {
+                        clearTimeout(debounceTimer);
+                        debounceTimer = setTimeout(() => convertEncode('encoded'), 300);
+                    });
+                    
+                    decodedArea.addEventListener('input', () => {
+                        clearTimeout(debounceTimer);
+                        debounceTimer = setTimeout(() => convertEncode('decoded'), 300);
+                    });
+                }, 0);
+            } else {
+                container.innerHTML = `
+                    <div class="tool-container">
+                        <h2 class="tool-title">${tool.name}</h2>
+                        <div class="tool-area">
+                            <div>
+                                <label>输入</label>
+                                <textarea id="inputArea" placeholder="请输入内容..."></textarea>
+                            </div>
+                            <div>
+                                <label>输出</label>
+                                <textarea id="outputArea" placeholder="结果..." readonly></textarea>
+                            </div>
+                        </div>
+                        <div class="tool-info" id="toolInfo"></div>
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    document.getElementById('inputArea').addEventListener('input', autoProcess);
+                }, 0);
+            } else if (activeToolId === 'textstats') {
+                container.innerHTML = `
+                    <div class="tool-container">
+                        <h2 class="tool-title">${tool.name}</h2>
+                        <div class="tool-area">
+                            <div style="flex: 1;">
+                                <label>输入文本（最大 100 万字符）</label>
+                                <textarea id="textInput" placeholder="请输入或粘贴文本..." style="min-height: 200px;"></textarea>
+                            </div>
+                        </div>
+                        <div class="char-limit-warning" id="charLimitWarning"></div>
+                        <div class="stats-grid" id="statsGrid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="charCount">0</div>
+                                <div class="stat-label">字符数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="wordCount">0</div>
+                                <div class="stat-label">单词数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="lineCount">0</div>
+                                <div class="stat-label">行数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="byteSize">0 B</div>
+                                <div class="stat-label">字节大小</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    const textInput = document.getElementById('textInput');
+                    const warningEl = document.getElementById('charLimitWarning');
+                    let debounceTimer;
+                    
+                    textInput.addEventListener('input', () => {
+                        if (textInput.value.length > MAX_CHARS) {
+                            textInput.value = textInput.value.substring(0, MAX_CHARS);
+                            warningEl.textContent = '⚠ 已截断至 100 万字符（超出部分已移除）';
+                            warningEl.className = 'char-limit-error';
+                        } else if (textInput.value.length > WARN_CHARS) {
+                            const percent = Math.round(textInput.value.length / WARN_CHARS * 50);
+                            warningEl.textContent = `⚠ 已使用 ${percent}% 限制`;
+                            warningEl.className = 'char-limit-warning';
+                        } else {
+                            warningEl.textContent = '';
+                            warningEl.className = '';
+                        }
+                        
+                        clearTimeout(debounceTimer);
+                        debounceTimer = setTimeout(() => calculateTextStats(), 300);
+                    });
+                }, 0);
+            } else {
+                        switch (currentEncodeType) {
+                            case 'url':
+                                decodedArea.value = decodeURIComponent(encoded);
+                                break;
+                            case 'base64':
+                                decodedArea.value = decodeURIComponent(escape(atob(encoded)));
+                                break;
+                            case 'html':
+                                const div1 = document.createElement('div');
+                                div1.innerHTML = encoded;
+                                decodedArea.value = div1.textContent;
+                                break;
+                            case 'unicode':
+                                decodedArea.value = encoded.replace(/\\u([0-9a-fA-F]{4})/g, (_, code) => String.fromCharCode(parseInt(code, 16)));
+                                break;
+                            case 'ascii':
+                                const asciiCodes = encoded.trim().split(/\s+/);
+                                for (const code of asciiCodes) {
+                                    const num = parseInt(code);
+                                    if (isNaN(num) || num < 0 || num > 127) {
+                                        throw new Error('含有非 ASCII 字符，无法转换');
+                                    }
+                                }
+                                decodedArea.value = asciiCodes.map(code => String.fromCharCode(parseInt(code))).join('');
+                                break;
+                        }
+                        info.textContent = '';
+                    }
+                } else {
+                    const decoded = decodedArea.value;
+                    if (!decoded) {
+                        encodedArea.value = '';
+                        info.textContent = '';
+                    } else {
+                        switch (currentEncodeType) {
+                            case 'url':
+                                encodedArea.value = encodeURIComponent(decoded);
+                                break;
+                            case 'base64':
+                                encodedArea.value = btoa(unescape(encodeURIComponent(decoded)));
+                                break;
+                            case 'html':
+                                encodedArea.value = decoded.replace(/[\u00-\u1F\u7F-\u9F]/g, ch => '&#' + ch.charCodeAt(0) + ';');
+                                break;
+                            case 'unicode':
+                                encodedArea.value = decoded.replace(/[\u4e00-\u9fa5]/g, ch => '\\u' + ch.charCodeAt(0).toString(16).padStart(4, '0'));
+                                break;
+                            case 'ascii':
+                                for (let i = 0; i < decoded.length; i++) {
+                                    const code = decoded.charCodeAt(i);
+                                    if (code < 0 || code > 127) {
+                                        throw new Error('含有非 ASCII 字符，无法转换');
+                                    }
+                                }
+                                encodedArea.value = decoded.split('').map(ch => ch.charCodeAt(0)).join(' ');
+                                break;
+                        }
+                        info.textContent = '';
+                    }
+                }
+                info.className = 'tool-info';
+            } catch (e) {
+                info.textContent = '✗ 转换失败：' + e.message;
+                info.className = 'tool-info error';
+            }
+            
+            setTimeout(() => {
+                conversionLock = false;
+            }, 50);
+        }
+        
+        function copyFromTextarea(textareaId) {
+            const textarea = document.getElementById(textareaId);
+            const value = textarea.value.trim();
+            
+            if (!value) {
+                const info = document.getElementById('toolInfo');
+                info.textContent = '✗ 没有可复制的内容';
+                info.className = 'tool-info error';
+                setTimeout(() => {
+                    info.textContent = '';
+                    info.className = 'tool-info';
+                }, 1500);
+                return;
+            }
+            
+            navigator.clipboard.writeText(value).then(() => {
+                const info = document.getElementById('toolInfo');
+                info.textContent = '✓ 已复制';
+                info.className = 'tool-info success';
+                setTimeout(() => {
+                    info.textContent = '';
+                    info.className = 'tool-info';
+                }, 1500);
+            }).catch(() => {
+                const info = document.getElementById('toolInfo');
+                info.textContent = '✗ 复制失败';
+                info.className = 'tool-info error';
+            });
+        }
+
+        let basePrefixState = { bin: false, oct: false, hex: false };
+        
+        function convertSegment(segment, baseIndex) {
+            const cleanValue = segment.replace(/^0[bBoOxX]/, '');
+            
+            switch (baseIndex) {
+                case 0:
+                    if (!/^[01]+$/.test(cleanValue)) throw new Error('无效的二进制');
+                    return BigInt('0b' + cleanValue);
+                case 1:
+                    if (!/^[0-7]+$/.test(cleanValue)) throw new Error('无效的八进制');
+                    return BigInt('0o' + cleanValue);
+                case 2:
+                    if (!/^[0-9]+$/.test(cleanValue)) throw new Error('无效的十进制');
+                    return BigInt(cleanValue);
+                case 3:
+                    if (!/^[0-9a-fA-F]+$/.test(cleanValue)) throw new Error('无效的十六进制');
+                    return BigInt('0x' + cleanValue);
+                default:
+                    throw new Error('无效的进制');
+            }
+        }
+        
+        function convertFromBase(baseIndex, value) {
+            const info = document.getElementById('toolInfo');
+            const inputs = [
+                document.getElementById('binInput'),
+                document.getElementById('octInput'),
+                document.getElementById('decInput'),
+                document.getElementById('hexInput')
+            ];
+            
+            if (!value) {
+                inputs.forEach(input => {
+                    if (input !== document.getElementById(['binInput', 'octInput', 'decInput', 'hexInput'][baseIndex])) {
+                        input.value = '';
+                    }
+                });
+                info.textContent = '';
+                info.className = 'tool-info';
+                return;
+            }
+            
+            try {
+                const hasSpaces = value.includes(' ');
+                const segments = value.trim().split(/\s+/);
+                
+                let decimals;
+                if (hasSpaces) {
+                    decimals = segments.map(segment => convertSegment(segment, baseIndex));
+                } else {
+                    decimals = [convertSegment(value, baseIndex)];
+                }
+                
+                const bin = decimals.map(d => d.toString(2)).join(' ');
+                const oct = decimals.map(d => d.toString(8)).join(' ');
+                const dec = decimals.map(d => d.toString(10)).join(' ');
+                const hex = decimals.map(d => d.toString(16).toUpperCase()).join(' ');
+                
+                inputs[0].value = basePrefixState.bin ? '0b' + bin : bin;
+                inputs[1].value = basePrefixState.oct ? '0o' + oct : oct;
+                inputs[2].value = dec;
+                inputs[3].value = basePrefixState.hex ? '0x' + hex : hex;
+                
+                info.textContent = '';
+                info.className = 'tool-info';
+            } catch (e) {
+                inputs.forEach(input => {
+                    if (input !== inputs[baseIndex]) {
+                        input.value = '';
+                    }
+                });
+                info.textContent = '✗ 无效的数字';
+                info.className = 'tool-info error';
+            }
+        }
+        
+        function togglePrefix(inputId, prefix) {
+            const input = document.getElementById(inputId);
+            let value = input.value.trim();
+            
+            if (!value) {
+                input.focus();
+                return;
+            }
+            
+            const cleanValue = value.replace(/^0[bBoOxX]/, '');
+            const hasPrefix = value.toLowerCase().startsWith(prefix.toLowerCase());
+            
+            if (hasPrefix) {
+                input.value = cleanValue;
+                if (inputId === 'binInput') basePrefixState.bin = false;
+                if (inputId === 'octInput') basePrefixState.oct = false;
+                if (inputId === 'hexInput') basePrefixState.hex = false;
+            } else {
+                input.value = prefix + cleanValue;
+                if (inputId === 'binInput') basePrefixState.bin = true;
+                if (inputId === 'octInput') basePrefixState.oct = true;
+                if (inputId === 'hexInput') basePrefixState.hex = true;
+            }
+            
+            input.dispatchEvent(new Event('input'));
+        }
+        
+        function copyFromInput(inputId) {
+            const input = document.getElementById(inputId);
+            const value = input.value.trim();
+            
+            if (!value) {
+                const info = document.getElementById('toolInfo');
+                info.textContent = '✗ 没有可复制的内容';
+                info.className = 'tool-info error';
+                setTimeout(() => {
+                    info.textContent = '';
+                    info.className = 'tool-info';
+                }, 1500);
+                return;
+            }
+            
+            navigator.clipboard.writeText(value).then(() => {
+                const info = document.getElementById('toolInfo');
+                info.textContent = '✓ 已复制';
+                info.className = 'tool-info success';
+                setTimeout(() => {
+                    info.textContent = '';
+                    info.className = 'tool-info';
+                }, 1500);
+            }).catch(() => {
+                const info = document.getElementById('toolInfo');
+                info.textContent = '✗ 复制失败';
+                info.className = 'tool-info error';
+            });
+        }
+
+        function calculateHashAuto() {
+            const input = document.getElementById('inputArea').value;
+            const resultsContainer = document.getElementById('hashResults');
+            const info = document.getElementById('toolInfo');
+            
+            if (!input) {
+                resultsContainer.innerHTML = '';
+                info.textContent = '';
+                return;
+            }
+
+            try {
+                const md5 = CryptoJS.MD5(input).toString();
+                const sha1 = CryptoJS.SHA1(input).toString();
+                const sha224 = CryptoJS.SHA224(input).toString();
+                const sha256 = CryptoJS.SHA256(input).toString();
+                const sha384 = CryptoJS.SHA384(input).toString();
+                const sha512 = CryptoJS.SHA512(input).toString();
+                const sha3 = CryptoJS.SHA3(input).toString();
+
+                resultsContainer.innerHTML = `
+                    <div class="hash-item">
+                        <label>MD5</label>
+                        <span class="hash-value">${md5}</span>
+                        <span class="copy-icon" onclick="copyHashValue('${md5}')">📋</span>
+                    </div>
+                    <div class="hash-item">
+                        <label>SHA1</label>
+                        <span class="hash-value">${sha1}</span>
+                        <span class="copy-icon" onclick="copyHashValue('${sha1}')">📋</span>
+                    </div>
+                    <div class="hash-item">
+                        <label>SHA224</label>
+                        <span class="hash-value">${sha224}</span>
+                        <span class="copy-icon" onclick="copyHashValue('${sha224}')">📋</span>
+                    </div>
+                    <div class="hash-item">
+                        <label>SHA256</label>
+                        <span class="hash-value">${sha256}</span>
+                        <span class="copy-icon" onclick="copyHashValue('${sha256}')">📋</span>
+                    </div>
+                    <div class="hash-item">
+                        <label>SHA384</label>
+                        <span class="hash-value">${sha384}</span>
+                        <span class="copy-icon" onclick="copyHashValue('${sha384}')">📋</span>
+                    </div>
+                    <div class="hash-item">
+                        <label>SHA512</label>
+                        <span class="hash-value">${sha512}</span>
+                        <span class="copy-icon" onclick="copyHashValue('${sha512}')">📋</span>
+                    </div>
+                    <div class="hash-item">
+                        <label>SHA3</label>
+                        <span class="hash-value">${sha3}</span>
+                        <span class="copy-icon" onclick="copyHashValue('${sha3}')">📋</span>
+                    </div>
+                `;
+                info.textContent = '';
+                info.className = 'tool-info';
+            } catch (e) {
+                resultsContainer.innerHTML = '';
+                info.textContent = '✗ 计算失败：' + e.message;
+                info.className = 'tool-info error';
+            }
+        }
+        
+        function copyHashValue(value) {
+            navigator.clipboard.writeText(value).then(() => {
+                const info = document.getElementById('toolInfo');
+                info.textContent = '✓ 已复制';
+                info.className = 'tool-info success';
+                setTimeout(() => {
+                    info.textContent = '';
+                    info.className = 'tool-info';
+                }, 1500);
+            }).catch(() => {
+                const info = document.getElementById('toolInfo');
+                info.textContent = '✗ 复制失败';
+                info.className = 'tool-info error';
+            });
+        }
+
+        function aesEncrypt() {
+            const input = document.getElementById('inputArea').value;
+            const key = document.getElementById('aesKey').value;
+            const output = document.getElementById('outputArea');
+            const info = document.getElementById('toolInfo');
+
+            if (!key || key.length < 16) {
+                info.textContent = '密钥至少需要 16 字符';
+                info.className = 'tool-info error';
+                return;
+            }
+
+            try {
+                const paddedKey = key.padEnd(32, '0').substring(0, 32);
+                const encrypted = CryptoJS.AES.encrypt(input, paddedKey).toString();
+                output.value = encrypted;
+                info.textContent = '✓ 加密成功';
+                info.className = 'tool-info success';
+            } catch (e) {
+                output.value = '';
+                info.textContent = '✗ 加密失败：' + e.message;
+                info.className = 'tool-info error';
+            }
+        }
+
+        function aesDecrypt() {
+            const input = document.getElementById('inputArea').value;
+            const key = document.getElementById('aesKey').value;
+            const output = document.getElementById('outputArea');
+            const info = document.getElementById('toolInfo');
+
+            if (!key || key.length < 16) {
+                info.textContent = '密钥至少需要 16 字符';
+                info.className = 'tool-info error';
+                return;
+            }
+
+            try {
+                const paddedKey = key.padEnd(32, '0').substring(0, 32);
+                const decrypted = CryptoJS.AES.decrypt(input, paddedKey);
+                output.value = decrypted.toString(CryptoJS.enc.Utf8);
+                if (!output.value) {
+                    info.textContent = '✗ 解密失败，请检查密钥';
+                    info.className = 'tool-info error';
+                } else {
+                    info.textContent = '✓ 解密成功';
+                    info.className = 'tool-info success';
+                }
+            } catch (e) {
+                output.value = '';
+                info.textContent = '✗ 解密失败：' + e.message;
+                info.className = 'tool-info error';
+            }
+        }
+
+        function clearText() {
+            const input = document.getElementById('inputArea');
+            const output = document.getElementById('outputArea');
+            const keyInput = document.getElementById('aesKey');
+            const results = document.getElementById('hashResults');
+            const baseResults = document.getElementById('baseResults');
+            const info = document.getElementById('toolInfo');
+            
+            if (input) input.value = '';
+            if (output) output.value = '';
+            if (keyInput) keyInput.value = '';
+            if (results) results.innerHTML = '';
+            if (baseResults) baseResults.innerHTML = '';
+            if (info) {
+                info.textContent = '';
+                info.className = 'tool-info';
+            }
+        }
+
+        function copyOutput() {
+            const output = document.getElementById('outputArea');
+            if (output && output.value) {
+                output.select();
+                document.execCommand('copy');
+                const info = document.getElementById('toolInfo');
+                info.textContent = '✓ 已复制到剪贴板';
+                info.className = 'tool-info success';
+                setTimeout(() => {
+                    info.textContent = '';
+                    info.className = 'tool-info';
+                }, 2000);
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                renderToolList();
+                renderContent();
+            });
+        } else {
+            renderToolList();
+            renderContent();
+        }
+    </script>
+</body>
+</html>
