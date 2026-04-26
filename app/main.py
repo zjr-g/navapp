@@ -54,6 +54,11 @@ def tools(request: Request):
     return templates.TemplateResponse("tools.html", {"request": request})
 
 
+@app.get("/api/health")
+def health_check():
+    return {"status": "healthy", "service": "navapp"}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
