@@ -41,8 +41,34 @@
         </div>
     </div>
     <script>
+        // Token 管理函数（与 dashboard.html 保持一致）
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        function isTokenExpired(token) {
+            const payload = parseJwt(token);
+            if (!payload || !payload.exp) return true;
+            return payload.exp * 1000 < Date.now() + 5 * 60 * 1000;
+        }
+        
+        // 检查现有 token 是否有效
         const token = localStorage.getItem('token');
-        if (token) window.location.href = '/dashboard';
+        if (token && !isTokenExpired(token)) {
+            window.location.href = '/dashboard';
+        } else if (token) {
+            // Token 已过期，清除
+            localStorage.removeItem('token');
+        }
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();

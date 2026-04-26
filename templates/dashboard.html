@@ -205,8 +205,41 @@
     </div>
 
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/login';
+        // Token 管理
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        function isTokenExpired(token) {
+            const payload = parseJwt(token);
+            if (!payload || !payload.exp) return true;
+            // 提前 5 分钟过期，避免边界情况
+            return payload.exp * 1000 < Date.now() + 5 * 60 * 1000;
+        }
+        
+        function checkToken() {
+            const token = localStorage.getItem('token');
+            if (!token || isTokenExpired(token)) {
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+                return null;
+            }
+            return token;
+        }
+        
+        const token = checkToken();
+        if (!token) {
+            // 已经在 checkToken 中跳转
+        }
 
         let categories = [];
         let searchEngines = [];
@@ -237,8 +270,18 @@
         }
 
         async function api(url, options = {}) {
-            const res = await fetch(url, { ...options, headers: { ...options.headers, 'Authorization': `Bearer ${token}` } });
-            if (res.status === 401) { logout(); throw new Error('Unauthorized'); }
+            // 每次 API 调用前检查 token 是否过期
+            const currentToken = checkToken();
+            if (!currentToken) {
+                throw new Error('Token expired or missing');
+            }
+            
+            const res = await fetch(url, { ...options, headers: { ...options.headers, 'Authorization': `Bearer ${currentToken}` } });
+            if (res.status === 401) { 
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+                throw new Error('Unauthorized'); 
+            }
             return res.json();
         }
 
@@ -364,6 +407,13 @@
             localStorage.removeItem('token');
             window.location.href = '/login';
         }
+        
+        // 定期检查 token 是否过期（每 5 分钟）
+        setInterval(() => {
+            if (!checkToken()) {
+                // checkToken 会自动跳转登录页
+            }
+        }, 5 * 60 * 1000);
 
         function openModal(id) { document.getElementById(id).classList.add('active'); }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }

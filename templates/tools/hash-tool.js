@@ -48,46 +48,41 @@
                 const sha512 = CryptoJS.SHA512(inputValue).toString();
                 const sha3 = CryptoJS.SHA3(inputValue).toString();
 
-                resultsContainer.innerHTML = `
-                    <div class="hash-item">
-                        <label>MD5</label>
-                        <span class="hash-value">${md5}</span>
-                        <span class="copy-icon" onclick="ToolsCommon.copyToClipboard('${md5}')">📋</span>
-                    </div>
-                    <div class="hash-item">
-                        <label>SHA1</label>
-                        <span class="hash-value">${sha1}</span>
-                        <span class="copy-icon" onclick="ToolsCommon.copyToClipboard('${sha1}')">📋</span>
-                    </div>
-                    <div class="hash-item">
-                        <label>SHA224</label>
-                        <span class="hash-value">${sha224}</span>
-                        <span class="copy-icon" onclick="ToolsCommon.copyToClipboard('${sha224}')">📋</span>
-                    </div>
-                    <div class="hash-item">
-                        <label>SHA256</label>
-                        <span class="hash-value">${sha256}</span>
-                        <span class="copy-icon" onclick="ToolsCommon.copyToClipboard('${sha256}')">📋</span>
-                    </div>
-                    <div class="hash-item">
-                        <label>SHA384</label>
-                        <span class="hash-value">${sha384}</span>
-                        <span class="copy-icon" onclick="ToolsCommon.copyToClipboard('${sha384}')">📋</span>
-                    </div>
-                    <div class="hash-item">
-                        <label>SHA512</label>
-                        <span class="hash-value">${sha512}</span>
-                        <span class="copy-icon" onclick="ToolsCommon.copyToClipboard('${sha512}')">📋</span>
-                    </div>
-                    <div class="hash-item">
-                        <label>SHA3</label>
-                        <span class="hash-value">${sha3}</span>
-                        <span class="copy-icon" onclick="ToolsCommon.copyToClipboard('${sha3}')">📋</span>
-                    </div>
-                `;
+                const createHashItem = (label, value) => {
+                    const item = document.createElement('div');
+                    item.className = 'hash-item';
+                    
+                    const labelEl = document.createElement('label');
+                    labelEl.textContent = label;
+                    
+                    const valueEl = document.createElement('span');
+                    valueEl.className = 'hash-value';
+                    valueEl.textContent = value;
+                    
+                    const copyIcon = document.createElement('span');
+                    copyIcon.className = 'copy-icon';
+                    copyIcon.textContent = '📋';
+                    copyIcon.onclick = () => ToolsCommon.copyToClipboard(value, '✓ 已复制', '✗ 复制失败');
+                    
+                    item.appendChild(labelEl);
+                    item.appendChild(valueEl);
+                    item.appendChild(copyIcon);
+                    return item;
+                };
+
+                resultsContainer.innerHTML = '';
+                resultsContainer.appendChild(createHashItem('MD5', md5));
+                resultsContainer.appendChild(createHashItem('SHA1', sha1));
+                resultsContainer.appendChild(createHashItem('SHA224', sha224));
+                resultsContainer.appendChild(createHashItem('SHA256', sha256));
+                resultsContainer.appendChild(createHashItem('SHA384', sha384));
+                resultsContainer.appendChild(createHashItem('SHA512', sha512));
+                resultsContainer.appendChild(createHashItem('SHA3', sha3));
+                
+                ToolsCommon.showInfo('', 'info', 0);
             } catch (e) {
                 resultsContainer.innerHTML = '';
-                ToolsCommon.showInfo('✗ 计算失败：' + e.message, 'error');
+                ToolsCommon.showInfo('✗ 计算失败', 'error');
             }
         }
     };

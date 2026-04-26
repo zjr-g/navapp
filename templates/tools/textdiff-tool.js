@@ -4,6 +4,9 @@
     let currentDiffMode = 'line';
     let currentDiffResult = null;
     
+    // 内存优化：最大比较行数
+    const MAX_COMPARE_LINES = 10000;
+    
     const tool = {
         id: 'textdiff',
         name: '文本比较',
@@ -125,6 +128,14 @@
             let linesA = textA.split(/\r\n|\r|\n/);
             let linesB = textB.split(/\r\n|\r|\n/);
             
+            // 内存优化：检查行数限制
+            const totalLines = Math.max(linesA.length, linesB.length);
+            if (totalLines > MAX_COMPARE_LINES) {
+                linesA = linesA.slice(0, MAX_COMPARE_LINES);
+                linesB = linesB.slice(0, MAX_COMPARE_LINES);
+                throw new Error(`文本行数过多（${totalLines} 行），最大支持 ${MAX_COMPARE_LINES} 行`);
+            }
+            
             if (ignoreWhitespace) {
                 linesA = linesA.map(l => l.trim().replace(/\s+/g, ' '));
                 linesB = linesB.map(l => l.trim().replace(/\s+/g, ' '));
@@ -194,13 +205,15 @@
             
             const resultsBody = document.getElementById('diffResultsBody');
             
+            // 内存优化：比较前释放旧结果
+            currentDiffResult = null;
+            if (resultsBody) resultsBody.innerHTML = '';
+            
             if (!textA && !textB) {
                 ['totalLines', 'sameLines', 'diffLines', 'addedLines', 'removedLines'].forEach(id => {
                     ToolsCommon.updateStat(id, 0);
                 });
-                if (resultsBody) resultsBody.innerHTML = '';
                 ToolsCommon.showInfo('', 'info', 0);
-                currentDiffResult = null;
                 return;
             }
             

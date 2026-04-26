@@ -25,7 +25,7 @@
         },
         
         // 懒加载工具
-        async loadTool(id) {
+        async loadTool(id, retryCount = 0, maxRetries = 3) {
             if (this.loaded[id]) {
                 return this.tools[id];
             }
@@ -33,13 +33,26 @@
             return new Promise((resolve, reject) => {
                 const script = document.createElement('script');
                 script.src = `/templates/tools/${id}-tool.js`;
+                
                 script.onload = () => {
                     this.loaded[id] = true;
                     resolve(this.tools[id]);
                 };
+                
                 script.onerror = () => {
-                    reject(new Error(`加载工具 ${id} 失败`));
+                    if (retryCount < maxRetries) {
+                        console.log(`加载工具 ${id} 失败，重试 ${retryCount + 1}/${maxRetries}...`);
+                        setTimeout(() => {
+                            document.head.removeChild(script);
+                            this.loadTool(id, retryCount + 1, maxRetries)
+                                .then(resolve)
+                                .catch(reject);
+                        }, 500 * (retryCount + 1));
+                    } else {
+                        reject(new Error(`加载工具 ${id} 失败，已重试 ${maxRetries} 次`));
+                    }
                 };
+                
                 document.head.appendChild(script);
             });
         }

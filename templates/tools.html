@@ -271,7 +271,7 @@
                 }
                 
                 try {
-                    // 懒加载工具
+                    // 懒加载工具（带重试机制）
                     const tool = await ToolsRegistry.loadTool(id);
                     
                     activeToolId = id;
@@ -286,6 +286,9 @@
                         <div class="tool-container">
                             <h2 class="tool-title">加载失败</h2>
                             <p class="tool-info error">✗ 无法加载工具：${e.message}</p>
+                            <div class="tool-actions" style="margin-top: 1rem;">
+                                <button onclick="ToolManager.loadTool('${id}')">重试</button>
+                            </div>
                         </div>
                     `;
                 }
