@@ -6,6 +6,7 @@
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <title>IT 工具 - NavApp</title>
     <script src="/static/crypto-js.min.js"></script>
+    <script src="/static/qrcode.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; display: flex; flex-direction: column; }
@@ -157,6 +158,31 @@
         .chmod-result-item .result-value { font-family: monospace; font-size: 14px; color: #333; flex: 1; word-break: break-all; }
         .chmod-result-item .copy-icon { cursor: pointer; opacity: 0.5; transition: opacity 0.2s; font-size: 16px; margin-left: 0.5rem; }
         .chmod-result-item .copy-icon:hover { opacity: 1; }
+        
+        .qrcode-container { display: flex; flex-direction: column; gap: 1.5rem; }
+        .qrcode-input-area { display: flex; flex-direction: column; gap: 0.5rem; }
+        .qrcode-input-area label { font-size: 14px; color: #666; font-weight: 500; }
+        .qrcode-input-area textarea { min-height: 120px; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; resize: vertical; font-family: inherit; }
+        .qrcode-input-area textarea:focus { border-color: #4a90d9; }
+        .qrcode-input-area .char-count { font-size: 12px; color: #999; text-align: right; }
+        .qrcode-input-area .char-count.warning { color: #f39c12; }
+        .qrcode-input-area .char-count.error { color: #e74c3c; }
+        
+        .qrcode-settings { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .qrcode-setting-item { display: flex; flex-direction: column; gap: 0.5rem; }
+        .qrcode-setting-item label { font-size: 13px; color: #666; font-weight: 500; }
+        .qrcode-setting-item select, .qrcode-setting-item input[type="text"] { padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; background: white; }
+        .qrcode-setting-item select:focus, .qrcode-setting-item input[type="text"]:focus { border-color: #4a90d9; }
+        .qrcode-color-settings { display: flex; gap: 1rem; }
+        .qrcode-color-item { display: flex; align-items: center; gap: 0.5rem; }
+        .qrcode-color-item input[type="color"] { width: 50px; height: 36px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; }
+        .qrcode-color-item label { font-size: 13px; color: #666; font-weight: 500; white-space: nowrap; }
+        
+        .qrcode-display { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 1.5rem; background: #f8f9fa; border-radius: 12px; }
+        .qrcode-display #qrcodeCanvas { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .qrcode-display .qrcode-error { color: #e74c3c; font-size: 14px; }
+        
+        .qrcode-actions { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
     </style>
 </head>
 <body>
@@ -200,7 +226,8 @@
             { id: 'encode', name: '编码/解码', icon: '📝' },
             { id: 'textstats', name: '文本统计', icon: '📊' },
             { id: 'textdiff', name: '文本比较', icon: '🔀' },
-            { id: 'chmod', name: 'Chmod 计算器', icon: '🔒' }
+            { id: 'chmod', name: 'Chmod 计算器', icon: '🔒' },
+            { id: 'qrcode', name: '二维码生成器', icon: '📱' }
         ];
 
         const MAX_CHARS = 1000000;
@@ -662,6 +689,82 @@
                 setTimeout(() => {
                     calculateChmod();
                 }, 0);
+            } else if (activeToolId === 'qrcode') {
+                container.innerHTML = `
+                    <div class="tool-container">
+                        <h2 class="tool-title">${tool.name}</h2>
+                        <div class="qrcode-container">
+                            <div class="qrcode-input-area">
+                                <label>内容（文本或 URL）</label>
+                                <textarea id="qrcodeInput" placeholder="请输入要生成二维码的内容..." maxlength="2953"></textarea>
+                                <div class="char-count" id="qrcodeCharCount">0 / 2953 字符</div>
+                            </div>
+                            <div class="qrcode-settings">
+                                <div class="qrcode-setting-item">
+                                    <label>纠错等级</label>
+                                    <select id="qrcodeErrorLevel" onchange="generateQRCode()">
+                                        <option value="L">L - 低 (~7%)</option>
+                                        <option value="M" selected>M - 中 (~15%)</option>
+                                        <option value="Q">Q - 较高 (~25%)</option>
+                                        <option value="H">H - 高 (~30%)</option>
+                                    </select>
+                                </div>
+                                <div class="qrcode-setting-item">
+                                    <label>尺寸</label>
+                                    <select id="qrcodeSize" onchange="generateQRCode()">
+                                        <option value="128">128 x 128</option>
+                                        <option value="256" selected>256 x 256</option>
+                                        <option value="512">512 x 512</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="qrcode-color-settings">
+                                <div class="qrcode-color-item">
+                                    <input type="color" id="qrcodeColorDark" value="#000000" onchange="generateQRCode()">
+                                    <label>前景色</label>
+                                </div>
+                                <div class="qrcode-color-item">
+                                    <input type="color" id="qrcodeColorLight" value="#ffffff" onchange="generateQRCode()">
+                                    <label>背景色</label>
+                                </div>
+                            </div>
+                            <div class="qrcode-display">
+                                <div id="qrcodeCanvas"></div>
+                                <div class="qrcode-error" id="qrcodeError"></div>
+                            </div>
+                            <div class="qrcode-actions">
+                                <button class="secondary" onclick="downloadQRCode()">下载 PNG</button>
+                                <button class="secondary" onclick="copyQRCode()">复制图片</button>
+                                <button class="secondary" onclick="clearQRCode()">清空</button>
+                            </div>
+                        </div>
+                        <div class="tool-info" id="toolInfo"></div>
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    const input = document.getElementById('qrcodeInput');
+                    const charCount = document.getElementById('qrcodeCharCount');
+                    let debounceTimer;
+                    
+                    input.addEventListener('input', () => {
+                        const count = input.value.length;
+                        charCount.textContent = `${count} / 2953 字符`;
+                        
+                        if (count > 2000) {
+                            charCount.className = 'char-count error';
+                        } else if (count > 1000) {
+                            charCount.className = 'char-count warning';
+                        } else {
+                            charCount.className = 'char-count';
+                        }
+                        
+                        clearTimeout(debounceTimer);
+                        debounceTimer = setTimeout(generateQRCode, 300);
+                    });
+                    
+                    generateQRCode();
+                }, 0);
             } else if (activeToolId === 'json') {
                 container.innerHTML = `
                     <div class="tool-container">
@@ -746,10 +849,19 @@
             const decodedArea = document.getElementById('decodedArea');
             const info = document.getElementById('toolInfo');
             
-            encodedArea.value = '';
-            decodedArea.value = '';
-            info.textContent = '';
-            info.className = 'tool-info';
+            const encodeNames = { url: 'URL', base64: 'Base64', html: 'HTML 实体', unicode: 'Unicode', ascii: 'ASCII' };
+            info.textContent = `已切换到 ${encodeNames[currentEncodeType] || currentEncodeType} 编码`;
+            info.className = 'tool-info success';
+            setTimeout(() => {
+                info.textContent = '';
+                info.className = 'tool-info';
+            }, 1500);
+            
+            if (encodedArea.value) {
+                convertEncode('encoded');
+            } else if (decodedArea.value) {
+                convertEncode('decoded');
+            }
         }
         
         function convertEncode(source) {
@@ -1633,6 +1745,210 @@
                 info.textContent = '';
                 info.className = 'tool-info';
             }, 1500);
+        }
+        
+        let qrcodeObj = null;
+        
+        function generateQRCode() {
+            const input = document.getElementById('qrcodeInput');
+            const errorLevel = document.getElementById('qrcodeErrorLevel');
+            const size = document.getElementById('qrcodeSize');
+            const colorDark = document.getElementById('qrcodeColorDark');
+            const colorLight = document.getElementById('qrcodeColorLight');
+            const canvas = document.getElementById('qrcodeCanvas');
+            const error = document.getElementById('qrcodeError');
+            const info = document.getElementById('toolInfo');
+            
+            if (!input || !canvas) return;
+            
+            const text = input.value.trim();
+            
+            if (!text) {
+                canvas.innerHTML = '';
+                if (error) error.textContent = '';
+                qrcodeObj = null;
+                return;
+            }
+            
+            try {
+                canvas.innerHTML = '';
+                
+                const correctLevel = QRCode.CorrectLevel[errorLevel.value];
+                
+                qrcodeObj = new QRCode(canvas, {
+                    text: text,
+                    width: parseInt(size.value),
+                    height: parseInt(size.value),
+                    colorDark: colorDark.value,
+                    colorLight: colorLight.value,
+                    correctLevel: correctLevel
+                });
+                
+                if (error) error.textContent = '';
+                if (info) {
+                    info.textContent = '✓ 二维码已生成';
+                    info.className = 'tool-info success';
+                    setTimeout(() => {
+                        info.textContent = '';
+                        info.className = 'tool-info';
+                    }, 1500);
+                }
+            } catch (e) {
+                if (error) {
+                    error.textContent = '✗ 生成失败：' + e.message;
+                }
+                if (info) {
+                    info.textContent = '✗ 生成失败';
+                    info.className = 'tool-info error';
+                }
+                qrcodeObj = null;
+            }
+        }
+        
+        function downloadQRCode() {
+            const canvas = document.getElementById('qrcodeCanvas');
+            const info = document.getElementById('toolInfo');
+            
+            if (!canvas || !qrcodeObj) {
+                if (info) {
+                    info.textContent = '✗ 先生成二维码';
+                    info.className = 'tool-info error';
+                    setTimeout(() => {
+                        info.textContent = '';
+                        info.className = 'tool-info';
+                    }, 1500);
+                }
+                return;
+            }
+            
+            try {
+                const img = canvas.querySelector('img');
+                if (img && img.src) {
+                    const link = document.createElement('a');
+                    link.href = img.src;
+                    link.download = `qrcode_${Date.now()}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    if (info) {
+                        info.textContent = '✓ 已下载';
+                        info.className = 'tool-info success';
+                        setTimeout(() => {
+                            info.textContent = '';
+                            info.className = 'tool-info';
+                        }, 1500);
+                    }
+                } else {
+                    const canvasEl = canvas.querySelector('canvas');
+                    if (canvasEl) {
+                        const link = document.createElement('a');
+                        link.href = canvasEl.toDataURL('image/png');
+                        link.download = `qrcode_${Date.now()}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        if (info) {
+                            info.textContent = '✓ 已下载';
+                            info.className = 'tool-info success';
+                            setTimeout(() => {
+                                info.textContent = '';
+                                info.className = 'tool-info';
+                            }, 1500);
+                        }
+                    }
+                }
+            } catch (e) {
+                if (info) {
+                    info.textContent = '✗ 下载失败：' + e.message;
+                    info.className = 'tool-info error';
+                }
+            }
+        }
+        
+        function copyQRCode() {
+            const canvas = document.getElementById('qrcodeCanvas');
+            const info = document.getElementById('toolInfo');
+            
+            if (!canvas || !qrcodeObj) {
+                if (info) {
+                    info.textContent = '✗ 先生成二维码';
+                    info.className = 'tool-info error';
+                    setTimeout(() => {
+                        info.textContent = '';
+                        info.className = 'tool-info';
+                    }, 1500);
+                }
+                return;
+            }
+            
+            try {
+                const img = canvas.querySelector('img');
+                if (img && img.src) {
+                    fetch(img.src)
+                        .then(response => response.blob())
+                        .then(blob => {
+                            navigator.clipboard.write([
+                                new ClipboardItem({
+                                    'image/png': blob
+                                })
+                            ]).then(() => {
+                                if (info) {
+                                    info.textContent = '✓ 已复制到剪贴板';
+                                    info.className = 'tool-info success';
+                                    setTimeout(() => {
+                                        info.textContent = '';
+                                        info.className = 'tool-info';
+                                    }, 1500);
+                                }
+                            }).catch(() => {
+                                if (info) {
+                                    info.textContent = '✗ 复制失败，浏览器不支持';
+                                    info.className = 'tool-info error';
+                                }
+                            });
+                        })
+                        .catch(() => {
+                            if (info) {
+                                info.textContent = '✗ 复制失败';
+                                info.className = 'tool-info error';
+                            }
+                        });
+                } else {
+                    if (info) {
+                        info.textContent = '✗ 复制失败';
+                        info.className = 'tool-info error';
+                    }
+                }
+            } catch (e) {
+                if (info) {
+                    info.textContent = '✗ 复制失败：' + e.message;
+                    info.className = 'tool-info error';
+                }
+            }
+        }
+        
+        function clearQRCode() {
+            const input = document.getElementById('qrcodeInput');
+            const canvas = document.getElementById('qrcodeCanvas');
+            const charCount = document.getElementById('qrcodeCharCount');
+            const error = document.getElementById('qrcodeError');
+            const info = document.getElementById('toolInfo');
+            
+            if (input) input.value = '';
+            if (canvas) canvas.innerHTML = '';
+            if (charCount) {
+                charCount.textContent = '0 / 2953 字符';
+                charCount.className = 'char-count';
+            }
+            if (error) error.textContent = '';
+            if (info) {
+                info.textContent = '';
+                info.className = 'tool-info';
+            }
+            
+            qrcodeObj = null;
         }
 
         if (document.readyState === 'loading') {
