@@ -53,9 +53,12 @@
         .sidebar-item { padding: 0.75rem 1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; transition: background 0.2s; }
         .sidebar-item:hover { background: #f5f5f5; }
         .sidebar-item.active { background: #e3f2fd; border-left: 3px solid #4a90d9; }
+        .sidebar-item.dragging { opacity: 0.5; background: #e0e0e0; }
+        .sidebar-item.drag-over { border-top: 2px solid #4a90d9; }
         .sidebar-item-name { font-size: 14px; color: #333; }
         .sidebar-item-actions { display: none; gap: 0.25rem; }
         .sidebar-item:hover .sidebar-item-actions { display: flex; }
+        .sidebar-item.edit-mode { cursor: move; }
         .sidebar-item-actions button { padding: 0.2rem 0.5rem; background: #f0f0f0; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; }
         
         .content { flex: 1; padding: 2rem; overflow-y: auto; }
@@ -351,15 +354,22 @@
 
         function renderSidebar() {
             const list = document.getElementById('sidebarList');
-            list.innerHTML = categories.map(cat => `
-                <div class="sidebar-item ${cat.id === activeCategoryId ? 'active' : ''}" onclick="setActiveCategory(${cat.id})">
-                    <span class="sidebar-item-name">${cat.name}</span>
+            list.innerHTML = categories.map((cat, index) => `
+                <div class="sidebar-item ${cat.id === activeCategoryId ? 'active' : ''} ${editMode ? 'edit-mode' : ''}" 
+                     data-id="${cat.id}"
+                     draggable="${editMode}"
+                     onclick="setActiveCategory(${cat.id})">
+                    <span class="sidebar-item-name">${editMode ? '☰ ' : ''}${cat.name}</span>
                     <div class="sidebar-item-actions" style="display: ${editMode ? 'flex' : 'none'}" onclick="event.stopPropagation()">
                         <button onclick="openCategoryModal(${cat.id}, '${cat.name}')">编辑</button>
                         <button onclick="deleteCategory(${cat.id})">删除</button>
                     </div>
                 </div>
             `).join('');
+            
+            if (editMode) {
+                initDragAndDrop();
+            }
         }
 
         function renderContent() {
@@ -511,9 +521,96 @@
         }
 
         async function deleteEngine(id) {
-            if (!confirm('确定删除该搜索引擎吗?')) return;
+            if (!confirm('确定删除该搜索引擎吗？')) return;
             await api(`/api/engines/${id}`, { method: 'DELETE' });
             loadData();
+        }
+
+        let draggedItem = null;
+
+        function initDragAndDrop() {
+            const items = document.querySelectorAll('.sidebar-item.edit-mode');
+            
+            items.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('dragleave', handleDragLeave);
+                item.addEventListener('drop', handleDrop);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedItem = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+            draggedItem = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (this !== draggedItem) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            if (draggedItem !== this) {
+                const fromId = parseInt(draggedItem.dataset.id);
+                const toId = parseInt(this.dataset.id);
+                
+                const fromIndex = categories.findIndex(c => c.id === fromId);
+                const toIndex = categories.findIndex(c => c.id === toId);
+                
+                if (fromIndex !== -1 && toIndex !== -1) {
+                    const [movedItem] = categories.splice(fromIndex, 1);
+                    categories.splice(toIndex, 0, movedItem);
+                    
+                    categories.forEach((cat, index) => {
+                        cat.sort_order = index;
+                    });
+                    
+                    saveCategoryOrder();
+                    renderSidebar();
+                    renderContent();
+                }
+            }
+        }
+
+        async function saveCategoryOrder() {
+            try {
+                const reorderData = {
+                    categories: categories.map(cat => ({
+                        id: cat.id,
+                        sort_order: cat.sort_order
+                    }))
+                };
+                await api('/api/categories/reorder', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reorderData)
+                });
+            } catch (error) {
+                console.error('保存排序失败:', error);
+                alert('保存排序失败，请重试');
+                loadData();
+            }
         }
 
         loadData();

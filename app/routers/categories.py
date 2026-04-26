@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User, Category
-from app.schemas import CategoryCreate, CategoryUpdate, CategoryResponse, CategoryWithLinks
+from app.schemas import CategoryCreate, CategoryUpdate, CategoryResponse, CategoryWithLinks, CategoryReorder
 from app.auth import get_current_user
 
 router = APIRouter(prefix="/api/categories", tags=["categories"])
@@ -22,6 +22,19 @@ def create_category(category: CategoryCreate, db: Session = Depends(get_db), cur
     db.commit()
     db.refresh(new_category)
     return new_category
+
+
+@router.put("/reorder")
+def reorder_categories(reorder_data: CategoryReorder, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    for item in reorder_data.categories:
+        db_category = db.query(Category).filter(
+            Category.id == item.id, 
+            Category.user_id == current_user.id
+        ).first()
+        if db_category:
+            db_category.sort_order = item.sort_order
+    db.commit()
+    return {"message": "Categories reordered"}
 
 
 @router.put("/{category_id}", response_model=CategoryResponse)

@@ -107,3 +107,12 @@ class SearchEngineResponse(SearchEngineBase):
 
     class Config:
         from_attributes = True
+
+
+class CategoryReorderItem(BaseModel):
+    id: int
+    sort_order: int
+
+
+class CategoryReorder(BaseModel):
+    categories: list[CategoryReorderItem]
