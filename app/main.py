@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.database import engine, Base
 from app.routers import auth, categories, links, engines
+import os
 
 Base.metadata.create_all(bind=engine)
 
@@ -16,6 +17,16 @@ app.include_router(engines.router)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+# 工具模块路由
+TOOLS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates", "tools")
+
+@app.get("/templates/tools/{filename}")
+async def get_tool_module(filename: str):
+    filepath = os.path.join(TOOLS_DIR, filename)
+    if os.path.exists(filepath):
+        return FileResponse(filepath, media_type="application/javascript")
+    return {"error": "File not found"}, 404
 
 
 @app.get("/", response_class=HTMLResponse)
