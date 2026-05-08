@@ -6,20 +6,66 @@
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <title>导航栏 - NavApp</title>
     <style>
+        :root {
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-secondary: #666666;
+            --muted: #999999;
+            --border: #dddddd;
+            --border-light: #e0e0e0;
+            --border-hover: #f0f0f0;
+            --primary: #4a90d9;
+            --primary-hover: #3a7bc8;
+            --primary-light: #e3f2fd;
+            --success: #27ae60;
+            --success-hover: #218c53;
+            --danger: #e74c3c;
+            --danger-hover: #c0392b;
+            --orange: #f39c12;
+            --purple: #9b59b6;
+            --hover-bg: #f5f5f5;
+            --shadow: rgba(0,0,0,0.1);
+            --modal-overlay: rgba(0,0,0,0.5);
+            --broken-bg: #fef0ef;
+        }
+        [data-theme="dark"] {
+            --bg: #1a1a2e;
+            --card-bg: #16213e;
+            --text: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --muted: #777777;
+            --border: #2a2a4a;
+            --border-light: #2a2a4a;
+            --border-hover: #333355;
+            --primary: #5b9bd5;
+            --primary-hover: #4a8bc5;
+            --primary-light: #1e3a5f;
+            --success: #2ecc71;
+            --success-hover: #27ae60;
+            --danger: #e74c3c;
+            --danger-hover: #c0392b;
+            --orange: #f39c12;
+            --purple: #9b59b6;
+            --hover-bg: #1e2a4a;
+            --shadow: rgba(0,0,0,0.3);
+            --modal-overlay: rgba(0,0,0,0.7);
+            --broken-bg: #3a1a1a;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; display: flex; flex-direction: column; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; }
         
-        header { background: white; padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; gap: 1rem; }
-        header h1 { font-size: 1.25rem; color: #333; white-space: nowrap; position: absolute; left: 2rem; }
+        header { background: var(--card-bg); padding: 1rem 2rem; box-shadow: 0 1px 3px var(--shadow); display: flex; align-items: center; justify-content: center; gap: 1rem; }
+        header h1 { font-size: 1.25rem; color: var(--text); white-space: nowrap; position: absolute; left: 2rem; }
         
         .header-actions { position: absolute; right: 2rem; display: flex; gap: 0.5rem; align-items: center; }
         .header-actions button { padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap; }
-        #editModeBtn { background: #4a90d9; color: white; }
-        #editModeBtn:hover { background: #3a7bc8; }
-        .tools-btn { background: transparent; color: #27ae60; border: 1px solid #27ae60; }
-        .tools-btn:hover { background: #27ae60; color: white; }
-        .logout-btn { background: #e74c3c; color: white; }
-        .logout-btn:hover { background: #c0392b; }
+        #editModeBtn { background: var(--primary); color: white; }
+        #editModeBtn:hover { background: var(--primary-hover); }
+        .tools-btn { background: transparent; color: var(--success); border: 1px solid var(--success); }
+        .tools-btn:hover { background: var(--success); color: white; }
+        .logout-btn { background: var(--danger); color: white; }
+        .logout-btn:hover { background: var(--danger-hover); }
         
         .engine-settings-btn { 
             font-size: 18px; 
@@ -38,71 +84,76 @@
         }
         
         .search-box { max-width: 600px; display: flex; gap: 0.5rem; align-items: center; }
-        .search-box input { flex: 1; padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 20px; font-size: 14px; outline: none; transition: all 0.2s; }
-        .search-box input:focus { border-color: #4a90d9; box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
-        .search-engine-select { padding: 0.5rem 1rem; border: 1px solid #e0e0e0; border-radius: 20px; font-size: 14px; outline: none; background: white; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-align: center; appearance: none; -webkit-appearance: none; -moz-appearance: none; }
-        .search-engine-select:hover { border-color: #4a90d9; box-shadow: 0 2px 8px rgba(74,144,217,0.15); }
-        .search-engine-select:focus { border-color: #4a90d9; box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
+        .search-box input { flex: 1; padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 20px; font-size: 14px; outline: none; transition: all 0.2s; }
+        .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
+        .search-engine-select { padding: 0.5rem 1rem; border: 1px solid var(--border-light); border-radius: 20px; font-size: 14px; outline: none; background: var(--card-bg); cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-align: center; appearance: none; -webkit-appearance: none; -moz-appearance: none; }
+        .search-engine-select:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(74,144,217,0.15); }
+        .search-engine-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
         
         .main { display: flex; flex: 1; }
         
-        .sidebar { width: 240px; background: white; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 1rem; font-weight: 600; color: #333; display: flex; justify-content: space-between; align-items: center; }
-        .sidebar-footer { padding: 1rem; border-top: 1px solid #e0e0e0; display: none; }
+        .sidebar { width: 240px; background: var(--card-bg); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 1rem; font-weight: 600; color: var(--text); display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-search { padding: 0 1rem 0.75rem 1rem; }
+        .sidebar-search input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s; background: var(--bg); color: var(--text); }
+        .sidebar-search input:focus { border-color: var(--primary); }
+        .sidebar-footer { padding: 1rem; border-top: 1px solid var(--border-light); display: none; }
         .sidebar-list { flex: 1; overflow-y: auto; }
-        .sidebar-item { padding: 0.75rem 1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; transition: background 0.2s; }
-        .sidebar-item:hover { background: #f5f5f5; }
-        .sidebar-item.active { background: #e3f2fd; border-left: 3px solid #4a90d9; }
-        .sidebar-item.dragging { opacity: 0.5; background: #e0e0e0; }
-        .sidebar-item.drag-over { border-top: 2px solid #4a90d9; }
-        .sidebar-item-name { font-size: 14px; color: #333; }
+        .sidebar-item { padding: 0.75rem 1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-hover); transition: background 0.2s; }
+        .sidebar-item:hover { background: var(--hover-bg); }
+        .sidebar-item.active { background: var(--primary-light); border-left: 3px solid var(--primary); }
+        .sidebar-item.dragging { opacity: 0.5; background: var(--border-light); }
+        .sidebar-item.drag-over { border-top: 2px solid var(--primary); }
+        .sidebar-item-name { font-size: 14px; color: var(--text); }
         .sidebar-item-actions { display: none; gap: 0.25rem; }
         .sidebar-item:hover .sidebar-item-actions { display: flex; }
         .sidebar-item.edit-mode { cursor: move; }
-        .sidebar-item-actions button { padding: 0.2rem 0.5rem; background: #f0f0f0; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .sidebar-item-actions button { padding: 0.2rem 0.5rem; background: var(--border-hover); border: none; border-radius: 4px; cursor: pointer; font-size: 11px; }
         
         .content { flex: 1; padding: 2rem; overflow-y: auto; }
         .content-header { margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; }
-        .content-title { font-size: 1.5rem; font-weight: 600; color: #333; }
+        .content-title { font-size: 1.5rem; font-weight: 600; color: var(--text); }
         
         .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
-        .link-card { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: white; border-radius: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; color: inherit; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .link-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .link-card { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--card-bg); border-radius: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; color: inherit; box-shadow: 0 1px 3px var(--shadow); }
+        .link-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px var(--shadow); }
+        .link-card.broken { border: 1px solid var(--danger); background: var(--broken-bg); }
+        .link-card.broken .link-title::after { content: ' ⚠️'; color: var(--danger); font-size: 12px; }
         .link-icon { font-size: 1.5rem; width: 1.5rem; height: 1.5rem; object-fit: contain; }
         .link-info { flex: 1; min-width: 0; }
-        .link-title { font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .link-title { font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .link-actions { display: none; gap: 0.25rem; }
         .link-card:hover .link-actions { display: flex; }
-        .link-actions button { padding: 0.25rem 0.5rem; background: white; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .link-actions button { padding: 0.25rem 0.5rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; }
         
-        .add-link-card { display: none; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem; background: white; border: 2px dashed #ddd; border-radius: 8px; cursor: pointer; color: #999; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .add-link-card { display: none; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem; background: var(--card-bg); border: 2px dashed var(--border); border-radius: 8px; cursor: pointer; color: var(--muted); box-shadow: 0 1px 3px var(--shadow); }
         .add-link-card.show { display: flex; }
-        .add-link-card:hover { border-color: #4a90d9; color: #4a90d9; }
+        .add-link-card:hover { border-color: var(--primary); color: var(--primary); }
         
-        .empty-state { text-align: center; padding: 3rem; color: #999; }
+        .empty-state { text-align: center; padding: 3rem; color: var(--muted); }
         
-        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--modal-overlay); align-items: center; justify-content: center; z-index: 100; }
         .modal.active { display: flex; }
-        .modal-content { background: white; padding: 2rem; border-radius: 12px; width: 100%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
-        .modal h2 { margin-bottom: 1.5rem; font-size: 1.25rem; }
+        .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 12px; width: 100%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+        .modal h2 { margin-bottom: 1.5rem; font-size: 1.25rem; color: var(--text); }
         .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; color: #666; font-size: 14px; }
-        .form-group input, .form-group select { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; }
-        .form-group input:focus { border-color: #4a90d9; }
+        .form-group label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 14px; }
+        .form-group input, .form-group select { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; outline: none; background: var(--bg); color: var(--text); }
+        .form-group input:focus { border-color: var(--primary); }
         .modal-actions { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; }
         .modal-actions button { padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
-        .modal-actions .cancel { background: #f0f0f0; color: #666; }
-        .modal-actions .submit { background: #4a90d9; color: white; }
+        .modal-actions .cancel { background: var(--border-hover); color: var(--text-secondary); }
+        .modal-actions .submit { background: var(--primary); color: white; }
         
         .engine-list { margin-bottom: 1rem; }
-        .engine-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 0.5rem; }
+        .engine-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--hover-bg); border-radius: 8px; margin-bottom: 0.5rem; }
         .engine-item-icon { font-size: 1.25rem; }
         .engine-item-info { flex: 1; }
-        .engine-item-name { font-weight: 500; color: #333; font-size: 14px; }
-        .engine-item-url { font-size: 12px; color: #999; }
-        .engine-item-default { font-size: 11px; color: #4a90d9; background: #e3f2fd; padding: 0.1rem 0.4rem; border-radius: 4px; }
+        .engine-item-name { font-weight: 500; color: var(--text); font-size: 14px; }
+        .engine-item-url { font-size: 12px; color: var(--muted); }
+        .engine-item-default { font-size: 11px; color: var(--primary); background: var(--primary-light); padding: 0.1rem 0.4rem; border-radius: 4px; }
         .engine-item-actions { display: flex; gap: 0.25rem; }
-        .engine-item-actions button { padding: 0.25rem 0.5rem; background: white; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .engine-item-actions button { padding: 0.25rem 0.5rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -116,6 +167,10 @@
         <div class="header-actions">
             <button class="tools-btn" onclick="window.location.href='/tools'">🛠️ IT 工具</button>
             <button id="editModeBtn" onclick="toggleEditMode()">编辑模式</button>
+            <button id="syncIconsBtn" onclick="syncIcons()" style="display:none; background:#f39c12; color:white; padding:0.5rem 1rem; border:none; border-radius:6px; cursor:pointer; font-size:14px;">同步图标</button>
+            <button id="importExportBtn" onclick="openImportExportModal()" style="display:none; background:#9b59b6; color:white; padding:0.5rem 1rem; border:none; border-radius:6px; cursor:pointer; font-size:14px;">导入/导出</button>
+            <button id="healthCheckBtn" onclick="checkLinkHealth()" style="display:none; background:#e74c3c; color:white; padding:0.5rem 1rem; border:none; border-radius:6px; cursor:pointer; font-size:14px;">检查链接</button>
+            <button id="themeToggleBtn" onclick="toggleTheme()" style="background:none; border:1px solid var(--border); border-radius:6px; cursor:pointer; font-size:18px; padding:0.4rem 0.6rem; line-height:1;">🌙</button>
             <button class="logout-btn" onclick="logout()">退出登录</button>
         </div>
     </header>
@@ -125,6 +180,9 @@
             <div class="sidebar-header">
                 <span>分类</span>
                 <button id="addCatBtn" onclick="openCategoryModal()" style="display: none; padding: 0.25rem 0.5rem; background: #4a90d9; font-size: 12px;">+</button>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="linkSearchInput" placeholder="搜索链接..." oninput="handleSearch(this.value)">
             </div>
             <div class="sidebar-list" id="sidebarList"></div>
         </div>
@@ -207,6 +265,23 @@
         </div>
     </div>
 
+    <div class="modal" id="importExportModal">
+        <div class="modal-content" style="max-width:500px">
+            <h2>导入 / 导出书签</h2>
+            <div style="display:flex;gap:1rem;margin-bottom:1rem">
+                <button onclick="exportBookmark()" style="flex:1;padding:0.75rem;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px">导出书签</button>
+                <label style="flex:1;padding:0.75rem;background:#4a90d9;color:white;border-radius:8px;cursor:pointer;font-size:14px;text-align:center;display:flex;align-items:center;justify-content:center">
+                    导入书签
+                    <input type="file" id="importFileInput" accept=".json,.html" style="display:none" onchange="importBookmark(this)">
+                </label>
+            </div>
+            <div id="importExportResult" style="min-height:1.5rem;font-size:13px;color:#666"></div>
+            <div class="modal-actions" style="margin-top:1rem">
+                <button type="button" class="cancel" onclick="closeModal('importExportModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Token 管理
         function parseJwt(token) {
@@ -239,15 +314,41 @@
             return token;
         }
         
-        const token = checkToken();
+const token = checkToken();
         if (!token) {
-            // 已经在 checkToken 中跳转
+        }
+
+        // 暗色模式初始化
+        (function initTheme() {
+            const saved = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                const btn = document.getElementById('themeToggleBtn');
+                if (btn) btn.textContent = '☀️';
+            }
+        })();
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const btn = document.getElementById('themeToggleBtn');
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                btn.textContent = '🌙';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                btn.textContent = '☀️';
+            }
         }
 
         let categories = [];
         let searchEngines = [];
         let editMode = false;
         let activeCategoryId = null;
+        let searchKeyword = '';
+        let healthResults = {};
 
         function toggleEditMode() {
             editMode = !editMode;
@@ -255,6 +356,16 @@
             btn.textContent = editMode ? '显示模式' : '编辑模式';
             btn.style.background = editMode ? '#27ae60' : '#4a90d9';
             document.getElementById('addCatBtn').style.display = editMode ? 'block' : 'none';
+            
+            // 控制同步图标按钮显示/隐藏
+            const syncBtn = document.getElementById('syncIconsBtn');
+            if (syncBtn) syncBtn.style.display = editMode ? 'inline-block' : 'none';
+            
+            const importExportBtn = document.getElementById('importExportBtn');
+            if (importExportBtn) importExportBtn.style.display = editMode ? 'inline-block' : 'none';
+            
+            const healthCheckBtn = document.getElementById('healthCheckBtn');
+            if (healthCheckBtn) healthCheckBtn.style.display = editMode ? 'inline-block' : 'none';
             
             // 控制设置图标显示/隐藏
             const settingsIcon = document.querySelector('.engine-settings-btn');
@@ -312,6 +423,35 @@
             }
         }
 
+        async function syncIcons() {
+            const btn = document.getElementById('syncIconsBtn');
+            btn.textContent = '同步中...';
+            btn.disabled = true;
+            try {
+                const result = await api('/api/links/sync-icons', { method: 'POST' });
+                btn.textContent = `✓ ${result.synced}个已同步`;
+                setTimeout(() => { btn.textContent = '同步图标'; btn.disabled = false; }, 2000);
+                loadData();
+            } catch (e) {
+                btn.textContent = '✗ 同步失败';
+                setTimeout(() => { btn.textContent = '同步图标'; btn.disabled = false; }, 2000);
+            }
+        }
+
+        async function autoSyncMissingIcons() {
+            const hasMissing = categories.some(cat => 
+                cat.links && cat.links.some(link => !link.icon_local)
+            );
+            if (hasMissing) {
+                try {
+                    await api('/api/links/sync-icons', { method: 'POST' });
+                    loadData();
+                } catch (e) {
+                    console.error('自动同步图标失败:', e);
+                }
+            }
+        }
+
         function getDomain(url) {
             try {
                 return new URL(url).hostname;
@@ -323,6 +463,28 @@
         function getFavicon(url) {
             const domain = getDomain(url);
             return domain ? `https://favicon.im/${domain}` : '';
+        }
+
+        async function fetchIconLocal(url) {
+            try {
+                const currentToken = checkToken();
+                if (!currentToken) return null;
+                const res = await fetch('/api/links/fetch-icon', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    return data.icon_local;
+                }
+            } catch (e) {
+                console.error('获取本地图标失败:', e);
+            }
+            return null;
         }
 
         function doSearch() {
@@ -372,8 +534,57 @@
             }
         }
 
+        function handleSearch(keyword) {
+            searchKeyword = keyword.trim().toLowerCase();
+            renderSidebar();
+            renderContent();
+        }
+
         function renderContent() {
             const container = document.getElementById('content');
+            
+            if (searchKeyword) {
+                const allLinks = [];
+                categories.forEach(cat => {
+                    cat.links.forEach(link => {
+                        if (link.title.toLowerCase().includes(searchKeyword) || link.url.toLowerCase().includes(searchKeyword)) {
+                            allLinks.push({...link, categoryName: cat.name});
+                        }
+                    });
+                });
+
+                if (allLinks.length === 0) {
+                    container.innerHTML = '<div class="empty-state">未找到匹配的链接</div>';
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="content-header">
+                        <h2 class="content-title">搜索结果 (${allLinks.length})</h2>
+                    </div>
+                    <div class="links-grid">
+                        ${allLinks.map(link => {
+                            const localIcon = link.icon_local;
+                            const isImage = localIcon || (link.icon && link.icon.startsWith('http'));
+                            const imgSrc = localIcon || link.icon;
+                            return `
+                            <a href="${link.url}" target="_blank" class="link-card${healthResults[link.id] && !healthResults[link.id].ok ? ' broken' : ''}">
+                                ${isImage ? `<img class="link-icon" src="${imgSrc}" onerror="this.onerror=null;this.src='';this.style.display='none';this.nextElementSibling.style.display='inline';">` : ''}<span class="link-icon" style="display: ${isImage ? 'none' : 'inline'}">${(!isImage && link.icon) ? link.icon : '🔗'}</span>
+                                <div class="link-info">
+                                    <div class="link-title">${link.title}</div>
+                                    <div style="font-size:11px;color:#999;margin-top:2px;">${link.categoryName}</div>
+                                </div>
+                                <div class="link-actions" onclick="event.preventDefault()" style="display: ${editMode ? 'flex' : 'none'}">
+                                    <button onclick="openLinkModal(${link.id}, ${link.category_id}, '${link.title}', '${link.url}', '${link.icon || ''}')">编辑</button>
+                                    <button onclick="deleteLink(${link.id})">删除</button>
+                                </div>
+                            </a>
+                        `}).join('')}
+                    </div>
+                `;
+                return;
+            }
+
             const category = categories.find(c => c.id === activeCategoryId);
             
             if (!category) {
@@ -387,10 +598,12 @@
                 </div>
                 <div class="links-grid">
                     ${category.links.map(link => {
-                        const isImage = link.icon && link.icon.startsWith('http');
+                        const localIcon = link.icon_local;
+                        const isImage = localIcon || (link.icon && link.icon.startsWith('http'));
+                        const imgSrc = localIcon || link.icon;
                         return `
-                        <a href="${link.url}" target="_blank" class="link-card">
-                            ${isImage ? `<img class="link-icon" src="${link.icon}" onerror="this.onerror=null;this.src='';this.style.display='none';this.nextElementSibling.style.display='inline';">` : ''}<span class="link-icon" style="display: ${isImage ? 'none' : 'inline'}">${link.icon || '🔗'}</span>
+                        <a href="${link.url}" target="_blank" class="link-card${healthResults[link.id] && !healthResults[link.id].ok ? ' broken' : ''}">
+                            ${isImage ? `<img class="link-icon" src="${imgSrc}" onerror="this.onerror=null;this.src='';this.style.display='none';this.nextElementSibling.style.display='inline';">` : ''}<span class="link-icon" style="display: ${isImage ? 'none' : 'inline'}">${(!isImage && link.icon) ? link.icon : '🔗'}</span>
                             <div class="link-info">
                                 <div class="link-title">${link.title}</div>
                             </div>
@@ -409,6 +622,9 @@
 
         function setActiveCategory(id) {
             activeCategoryId = id;
+            searchKeyword = '';
+            healthResults = {};
+            document.getElementById('linkSearchInput').value = '';
             renderSidebar();
             renderContent();
         }
@@ -475,18 +691,29 @@
             const title = document.getElementById('linkTitle').value;
             const url = document.getElementById('linkUrl').value;
             let icon = document.getElementById('linkIcon').value;
+            let iconLocal = null;
             
-            // 新增链接时始终尝试获取 favicon，编辑时仅在图标为空或默认时获取
-            if (!id) {
-                icon = getFavicon(url) || icon || '🔗';
+            // 尝试获取本地缓存图标
+            if (url) {
+                iconLocal = await fetchIconLocal(url);
+            }
+            
+            if (iconLocal) {
+                icon = iconLocal;
+            } else if (!id) {
+                icon = icon || getFavicon(url) || '🔗';
             } else if (!icon || icon === '🔗') {
                 icon = getFavicon(url) || '🔗';
             }
             
+            const payload = { category_id, title, url, icon };
+            if (iconLocal) payload.icon_local = iconLocal;
+            
             if (id) {
-                await api(`/api/links/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category_id, title, url, icon }) });
+                await api(`/api/links/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             } else {
-                await api('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category_id, title, url, icon, sort_order: 0 }) });
+                payload.sort_order = 0;
+                await api('/api/links', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             }
             closeModal('linkModal');
             loadData();
@@ -587,9 +814,10 @@
                     });
                     
                     saveCategoryOrder();
-                    renderSidebar();
-                    renderContent();
-                }
+renderSidebar();
+            renderContent();
+            autoSyncMissingIcons();
+        }
             }
         }
 
@@ -611,6 +839,146 @@
                 alert('保存排序失败，请重试');
                 loadData();
             }
+        }
+
+        function openImportExportModal() {
+            document.getElementById('importExportResult').textContent = '';
+            openModal('importExportModal');
+        }
+
+        async function checkLinkHealth() {
+            const btn = document.getElementById('healthCheckBtn');
+            btn.textContent = '检查中...';
+            btn.disabled = true;
+            try {
+                const data = await api('/api/links/check-health', { method: 'POST' });
+                healthResults = {};
+                let brokenCount = 0;
+                data.results.forEach(r => {
+                    healthResults[r.id] = { ok: r.ok, status_code: r.status_code };
+                    if (!r.ok) brokenCount++;
+                });
+                renderContent();
+                btn.textContent = brokenCount > 0 ? `⚠ ${brokenCount}个失效` : '✓ 全部正常';
+                setTimeout(() => { btn.textContent = '检查链接'; btn.disabled = false; }, 3000);
+            } catch (e) {
+                btn.textContent = '✗ 检查失败';
+                setTimeout(() => { btn.textContent = '检查链接'; btn.disabled = false; }, 2000);
+            }
+        }
+
+        async function exportBookmark() {
+            try {
+                const resultEl = document.getElementById('importExportResult');
+                const data = await api('/api/links/export');
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'navapp_bookmarks_' + new Date().toISOString().slice(0, 10) + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                resultEl.textContent = '✓ 导出成功';
+                resultEl.style.color = '#27ae60';
+            } catch (e) {
+                const resultEl = document.getElementById('importExportResult');
+                resultEl.textContent = '✗ 导出失败：' + e.message;
+                resultEl.style.color = '#e74c3c';
+            }
+        }
+
+        async function importBookmark(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const resultEl = document.getElementById('importExportResult');
+            resultEl.textContent = '导入中...';
+            resultEl.style.color = '#666';
+
+            try {
+                const text = await file.text();
+                let data;
+
+                if (file.name.endsWith('.html') || file.name.endsWith('.htm')) {
+                    data = parseBookmarkHtml(text);
+                } else {
+                    data = JSON.parse(text);
+                }
+
+                if (!Array.isArray(data)) {
+                    resultEl.textContent = '✗ 文件格式错误：期望分类数组';
+                    resultEl.style.color = '#e74c3c';
+                    return;
+                }
+
+                const result = await api('/api/links/import-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                resultEl.textContent = `✓ 导入完成：${result.imported_categories} 个分类，${result.imported_links} 个链接`;
+                resultEl.style.color = '#27ae60';
+                loadData();
+            } catch (e) {
+                resultEl.textContent = '✗ 导入失败：' + e.message;
+                resultEl.style.color = '#e74c3c';
+            }
+            input.value = '';
+        }
+
+        function parseBookmarkHtml(html) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const result = [];
+            const dlElements = doc.querySelectorAll('DL');
+
+            function parseDl(dl, parentName) {
+                const dts = dl.querySelectorAll(':scope > DT');
+                dts.forEach(dt => {
+                    const h3 = dt.querySelector(':scope > H3');
+                    const a = dt.querySelector(':scope > A');
+                    const subDl = dt.querySelector(':scope > DL');
+
+                    if (h3 && subDl) {
+                        let cat = result.find(c => c.category.name === h3.textContent.trim());
+                        if (!cat) {
+                            cat = { category: { name: h3.textContent.trim(), sort_order: result.length }, links: [] };
+                            result.push(cat);
+                        }
+                        parseDl(subDl, h3.textContent.trim()).forEach(link => cat.links.push(link));
+                    } else if (a && parentName) {
+                        let cat = result.find(c => c.category.name === parentName);
+                        if (!cat) {
+                            cat = { category: { name: parentName, sort_order: result.length }, links: [] };
+                            result.push(cat);
+                        }
+                        cat.links.push({ title: a.textContent.trim(), url: a.href, icon: '🔗', sort_order: cat.links.length });
+                    } else if (a && !parentName) {
+                        let cat = result.find(c => c.category.name === '未分类');
+                        if (!cat) {
+                            cat = { category: { name: '未分类', sort_order: result.length }, links: [] };
+                            result.push(cat);
+                        }
+                        cat.links.push({ title: a.textContent.trim(), url: a.href, icon: '🔗', sort_order: cat.links.length });
+                    }
+                });
+            }
+
+            if (dlElements.length > 0) {
+                parseDl(dlElements[0], null);
+            }
+
+            if (result.length === 0) {
+                const allLinks = doc.querySelectorAll('A');
+                if (allLinks.length > 0) {
+                    const cat = { category: { name: '导入书签', sort_order: 0 }, links: [] };
+                    allLinks.forEach((a, i) => {
+                        cat.links.push({ title: a.textContent.trim() || a.href, url: a.href, icon: '🔗', sort_order: i });
+                    });
+                    result.push(cat);
+                }
+            }
+
+            return result;
         }
 
         loadData();

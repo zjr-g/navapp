@@ -39,6 +39,7 @@ class Link(Base):
     title = Column(String, nullable=False)
     url = Column(String, nullable=False)
     icon = Column(String, default="🔗")
+    icon_local = Column(String, nullable=True)
     sort_order = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

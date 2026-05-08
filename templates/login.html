@@ -6,19 +6,21 @@
     <link rel="icon" type="image/png" href="/static/favicon.png">
     <title>登录 - NavApp</title>
     <style>
+        :root { --bg: #f5f5f5; --card-bg: white; --text: #333; --text-secondary: #666; --border: #ddd; --primary: #4a90d9; --primary-hover: #3a7bc8; --danger: #e74c3c; --shadow: rgba(0,0,0,0.1); }
+        [data-theme="dark"] { --bg: #1a1a2e; --card-bg: #16213e; --text: #e0e0e0; --text-secondary: #a0a0a0; --border: #2a2a4a; --primary: #5b9bd5; --primary-hover: #4a8bc5; --danger: #e74c3c; --shadow: rgba(0,0,0,0.3); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); width: 100%; max-width: 360px; }
-        h1 { text-align: center; margin-bottom: 1.5rem; color: #333; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { background: var(--card-bg); padding: 2rem; border-radius: 12px; box-shadow: 0 2px 12px var(--shadow); width: 100%; max-width: 360px; }
+        h1 { text-align: center; margin-bottom: 1.5rem; color: var(--text); }
         .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; color: #666; font-size: 14px; }
-        input { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s; }
-        input:focus { border-color: #4a90d9; }
-        button { width: 100%; padding: 0.75rem; background: #4a90d9; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: background 0.2s; }
-        button:hover { background: #3a7bc8; }
-        .error { color: #e74c3c; font-size: 14px; margin-bottom: 1rem; text-align: center; display: none; }
-        .switch { text-align: center; margin-top: 1rem; color: #666; font-size: 14px; }
-        .switch a { color: #4a90d9; text-decoration: none; }
+        label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 14px; }
+        input { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s; background: var(--card-bg); color: var(--text); }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 0.75rem; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: var(--primary-hover); }
+        .error { color: var(--danger); font-size: 14px; margin-bottom: 1rem; text-align: center; display: none; }
+        .switch { text-align: center; margin-top: 1rem; color: var(--text-secondary); font-size: 14px; }
+        .switch a { color: var(--primary); text-decoration: none; }
     </style>
 </head>
 <body>
@@ -41,6 +43,13 @@
         </div>
     </div>
     <script>
+        (function() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+
         // Token 管理函数（与 dashboard.html 保持一致）
         function parseJwt(token) {
             try {

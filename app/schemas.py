@@ -49,6 +49,7 @@ class LinkBase(BaseModel):
     title: str
     url: str
     icon: str = "🔗"
+    icon_local: Optional[str] = None
     sort_order: int = 0
 
 
@@ -60,6 +61,7 @@ class LinkUpdate(BaseModel):
     title: Optional[str] = None
     url: Optional[str] = None
     icon: Optional[str] = None
+    icon_local: Optional[str] = None
     category_id: Optional[int] = None
     sort_order: Optional[int] = None
 
@@ -68,6 +70,7 @@ class LinkResponse(LinkBase):
     id: int
     user_id: int
     category_id: int
+    icon_local: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

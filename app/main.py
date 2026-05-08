@@ -5,8 +5,14 @@ from fastapi.templating import Jinja2Templates
 from app.database import engine, Base
 from app.routers import auth, categories, links, engines
 import os
+import mimetypes
+
+mimetypes.add_type('image/webp', '.webp')
 
 Base.metadata.create_all(bind=engine)
+
+FAVICONS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "favicons")
+os.makedirs(FAVICONS_DIR, exist_ok=True)
 
 app = FastAPI(title="NavApp", description="Personal navigation web app")
 
