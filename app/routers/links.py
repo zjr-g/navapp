@@ -68,6 +68,13 @@ class IconUrlRequest(BaseModel):
     url: str
 
 
+def _to_online_icon(link_url: str, icon: str) -> str:
+    if icon and not icon.startswith("/"):
+        return icon
+    domain = _extract_domain(link_url)
+    return f"https://favicon.im/{domain}" if domain else icon
+
+
 @router.post("/fetch-icon")
 async def fetch_icon(request: IconUrlRequest, current_user: User = Depends(get_current_user)):
     try:
@@ -242,7 +249,12 @@ def export_links(db: Session = Depends(get_db), current_user: User = Depends(get
         links = db.query(Link).filter(Link.category_id == cat.id, Link.user_id == current_user.id).order_by(Link.sort_order).all()
         result.append({
             "category": {"name": cat.name, "sort_order": cat.sort_order},
-            "links": [{"title": l.title, "url": l.url, "icon": l.icon, "icon_local": l.icon_local, "sort_order": l.sort_order} for l in links]
+            "links": [{
+                "title": l.title,
+                "url": l.url,
+                "icon": _to_online_icon(l.url, l.icon),
+                "sort_order": l.sort_order
+            } for l in links]
         })
     return result
 
@@ -284,13 +296,20 @@ async def import_links(request: Request, db: Session = Depends(get_db), current_
                 title=link_data.get("title", "Untitled"),
                 url=link_data.get("url", ""),
                 icon=link_data.get("icon", "🔗"),
-                icon_local=link_data.get("icon_local"),
                 sort_order=link_data.get("sort_order", 0)
             )
             db.add(link)
             imported_links += 1
 
     db.commit()
+
+    for item in body:
+        for link_data in item.get("links", []):
+            url = link_data.get("url", "")
+            domain = _extract_domain(url)
+            if domain:
+                await _download_favicon(domain)
+
     return {"imported_categories": imported_categories, "imported_links": imported_links}
 
 
