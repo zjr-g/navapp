@@ -1,6 +1,17 @@
+<input type="radio" name="lang" id="lang-zh" checked hidden>
+<input type="radio" name="lang" id="lang-en" hidden>
+
+<div align="center" class="lang-tabs">
+  <label for="lang-zh">🇨🇳 中文</label>
+  <label for="lang-en">🇬🇧 English</label>
+</div>
+
+<!-- ==================== 中文 ==================== -->
+<div id="content-zh">
+
 # NavApp - 个人导航网站
 
-一个基于 FastAPI + SQLite 的现代化个人导航网站，支持用户认证、分类管理、链接管理和在线工具集。
+一个基于 **FastAPI + SQLite** 的现代化个人导航网站，支持用户认证、分类管理、链接管理和在线工具集。
 
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.109.0-green)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue)
@@ -12,8 +23,10 @@
 ### 🏠 核心功能
 - **用户系统** - 注册/登录、JWT 认证、密码加密（bcrypt）
 - **分类管理** - 自定义链接分类、排序
-- **链接管理** - 添加/编辑/删除链接、自定义图标
+- **链接管理** - 添加/编辑/删除链接、自定义图标、本地缓存、健康检查
 - **搜索引擎** - 多搜索引擎切换、自定义搜索引擎
+- **导入/导出** - 支持 JSON 和 HTML 书签格式
+- **暗色模式** - 一键切换，localStorage 持久化
 - **响应式设计** - 适配桌面和移动设备
 
 ### 🛠️ 在线工具集（10+ 工具）
@@ -30,7 +43,7 @@
 ### 🔒 安全特性
 - 密码 bcrypt 加密
 - JWT Token 认证（7 天有效期）
-- Token 自动过期检查
+- Token 前端自动过期检查
 - 用户数据隔离
 - XSS 防护（HTML 转义）
 
@@ -200,13 +213,12 @@ export SECRET_KEY="your-secret-key-here"
 
 ### 连接池配置
 ```python
-# app/database.py
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    pool_size=10,           # 连接池大小
-    max_overflow=20,        # 最大溢出连接数
-    pool_pre_ping=True,     # 连接前检查
-    pool_recycle=3600       # 连接回收时间（秒）
+    pool_size=10,
+    max_overflow=20,
+    pool_pre_ping=True,
+    pool_recycle=3600
 )
 ```
 
@@ -216,22 +228,18 @@ engine = create_engine(
 
 1. 在 `templates/tools/` 目录创建工具文件：
 ```javascript
-// mytool-tool.js
 (function() {
     const tool = {
         id: 'mytool',
         name: '我的工具',
         icon: '🔧',
-        
         render(container) {
             container.innerHTML = `<div class="tool-container">...</div>`;
         },
-        
         init(container) {
             // 初始化逻辑
         }
     };
-    
     ToolsRegistry.register(tool);
 })();
 ```
@@ -239,7 +247,6 @@ engine = create_engine(
 2. 在 `tools-core.js` 中添加工具配置：
 ```javascript
 standaloneTools: [
-    // ... 其他工具
     { id: 'mytool', name: '我的工具', icon: '🔧' }
 ]
 ```
@@ -263,32 +270,28 @@ standaloneTools: [
 - ✨ 图标本地缓存（修复 60% 图标因格式问题无法显示）
 
 ### v2.3 (2026-05-06)
-- 🔒 前端 Token 过期检查优化（dashboard.html + login.html）
+- 🔒 前端 Token 过期检查优化
 - 🔧 文本比较工具内存泄漏修复（MAX_COMPARE_LINES 限制）
-- 💾 数据库连接池配置优化（pool_size, max_overflow, pool_pre_ping）
+- 💾 数据库连接池配置优化
 - 🐛 修复工具模块加载失败问题（重试机制）
 - 🐛 修复 XSS 风险（HTML 拼接完全转义）
 
 ### v2.2 (2026-04-26)
 - ✨ 工具模块化重构（10 个独立工具文件）
-- ✨ 添加文本比较工具
-- ✨ 添加 Chmod 计算器
-- ✨ 添加二维码生成器
+- ✨ 添加文本比较工具、Chmod 计算器、二维码生成器
 - 🔒 前端 Token 过期检查
 - 🐛 修复 XSS 风险（HTML 转义）
 - ⚡ 工具懒加载 + 重试机制
 - 💾 数据库连接池优化
 
 ### v2.1 (2026-04-xx)
-- ✨ 添加编码/解码工具
-- ✨ 添加文本统计工具
+- ✨ 添加编码/解码工具、文本统计工具
 - 🔒 JWT 认证系统
 
 ### v2.0 (2026-03-xx)
-- ✨ 初始版本
-- ✨ 用户认证系统
-- ✨ 分类和链接管理
-- ✨ 搜索引擎管理
+- ✨ 初始版本：用户认证、分类和链接管理、搜索引擎管理
+
+---
 
 ## 🤝 贡献指南
 
@@ -306,7 +309,7 @@ MIT License
 
 ## 👨‍💻 作者
 
-zjr & Qwen3.5 Plus
+zjr & Qwen3.5 Plus & deepseek-v4-flash
 
 ## 🙏 致谢
 
@@ -314,3 +317,342 @@ zjr & Qwen3.5 Plus
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [CryptoJS](https://github.com/brix/crypto-js)
 - [QRCode.js](https://github.com/davidshimjs/qrcodejs)
+
+</div>
+
+<!-- ==================== English ==================== -->
+<div id="content-en">
+
+# NavApp - Personal Navigation Website
+
+A modern personal navigation website built with **FastAPI + SQLite**, featuring user authentication, bookmark management, and an online IT toolbox.
+
+![FastAPI](https://img.shields.io/badge/FastAPI-0.109.0-green)
+![Python](https://img.shields.io/badge/Python-3.8+-blue)
+![SQLite](https://img.shields.io/badge/SQLite-3.x-blue)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+
+## ✨ Features
+
+### 🏠 Core
+- **User System** - Register/Login, JWT auth, bcrypt password hashing
+- **Categories** - Custom link groups with sorting
+- **Bookmarks** - Add/Edit/Delete links, custom icons, local favicon cache, health check
+- **Search Engines** - Multi-engine switching, custom engines
+- **Import/Export** - JSON and HTML bookmark format support
+- **Dark Mode** - One-click toggle, persisted to localStorage
+- **Responsive** - Desktop and mobile friendly
+
+### 🛠️ Online Toolbox (10+ Tools)
+- **Hash Calculator** - MD5, SHA1, SHA224, SHA256, SHA384, SHA512, SHA3
+- **Base Converter** - Binary, Octal, Decimal, Hexadecimal
+- **Encode/Decode** - URL, Base64, HTML entities, Unicode, ASCII
+- **Text Stats** - Character, word, line count, byte size
+- **Text Diff** - Line/char comparison, diff highlight, export report
+- **Chmod Calculator** - Linux permission calculator
+- **QR Code Generator** - Custom color, size, error correction
+- **JSON Formatter** - JSON validation and formatting
+- **AES Encrypt/Decrypt** - AES-256 encryption and decryption
+
+### 🔒 Security
+- bcrypt password hashing
+- JWT Token auth (7-day expiry)
+- Auto token expiry check on frontend
+- Per-user data isolation
+- XSS protection (HTML escaping)
+
+## 📁 Project Structure
+
+```
+navapp/
+├── app/
+│   ├── __init__.py
+│   ├── main.py              # FastAPI entry point
+│   ├── models.py            # SQLAlchemy models
+│   ├── schemas.py           # Pydantic schemas
+│   ├── auth.py              # JWT auth & password
+│   ├── database.py          # Database config
+│   └── routers/
+│       ├── auth.py          # Auth routes
+│       ├── categories.py    # Category routes
+│       ├── links.py         # Link routes
+│       └── engines.py       # Search engine routes
+├── templates/
+│   ├── login.html           # Login page
+│   ├── register.html        # Register page
+│   ├── dashboard.html       # Main dashboard
+│   ├── tools.html           # IT tools page
+│   └── tools/               # Tool modules
+│       ├── tools-core.js    # Registry + utilities
+│       ├── hash-tool.js     # Hash calculator
+│       ├── base-tool.js     # Base converter
+│       ├── encode-tool.js   # Encode/Decode
+│       ├── textstats-tool.js # Text statistics
+│       ├── textdiff-tool.js  # Text diff
+│       ├── chmod-tool.js    # Chmod calculator
+│       ├── qrcode-tool.js   # QR code generator
+│       ├── json-tool.js     # JSON formatter
+│       └── aes-tool.js      # AES encrypt/decrypt
+├── static/
+│   ├── favicon.png          # Site favicon
+│   ├── crypto-js.min.js     # CryptoJS library
+│   └── qrcode.min.js        # QR code library
+├── requirements.txt         # Python dependencies
+└── README.md               # Documentation
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.8+
+- pip
+
+### Option 1: Direct
+
+#### Install Dependencies
+
+```bash
+cd navapp
+pip install -r requirements.txt
+```
+
+#### Start Server
+
+**Development (hot reload):**
+```bash
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Production:**
+```bash
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+### Option 2: Docker
+
+#### Using Docker Compose (Recommended)
+
+```bash
+# Start
+docker-compose up -d
+
+# Logs
+docker-compose logs -f
+
+# Stop
+docker-compose down
+```
+
+#### Using Docker
+
+```bash
+docker build -t navapp .
+docker run -d -p 8000:8000 -v $(pwd)/navapp.db:/app/navapp.db --name navapp navapp
+```
+
+### Access
+
+Open http://localhost:8000 in your browser.
+
+1. Click "Register" to create an account
+2. Log in to access the dashboard
+3. Add categories and bookmarks
+4. Visit `/tools` for the IT toolbox
+
+## 📊 API Endpoints
+
+### Auth
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/auth/register` | Register user |
+| POST | `/api/auth/login` | Login user |
+| GET | `/api/auth/me` | Get current user |
+
+### Categories
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/categories` | List categories |
+| POST | `/api/categories` | Create category |
+| PUT | `/api/categories/{id}` | Update category |
+| DELETE | `/api/categories/{id}` | Delete category |
+
+### Links
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/links` | List links |
+| POST | `/api/links` | Create link |
+| PUT | `/api/links/{id}` | Update link |
+| DELETE | `/api/links/{id}` | Delete link |
+
+### Search Engines
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/engines` | List engines |
+| POST | `/api/engines` | Create engine |
+| PUT | `/api/engines/{id}` | Update engine |
+| DELETE | `/api/engines/{id}` | Delete engine |
+| POST | `/api/engines/init-default` | Init default engines |
+
+## 🛠️ Tech Stack
+
+### Backend
+- **FastAPI** - High-performance web framework
+- **SQLAlchemy** - ORM framework
+- **SQLite** - Lightweight database
+- **Pydantic** - Data validation
+- **bcrypt** - Password hashing
+- **python-jose** - JWT auth
+- **Jinja2** - Template engine
+
+### Frontend
+- **Vanilla JavaScript** - No framework
+- **Modular Design** - Separated tool modules
+- **Lazy Loading** - On-demand tool loading
+- **CryptoJS** - Frontend encryption
+- **QRCode.js** - QR code generation
+
+## 🔧 Configuration
+
+### Database
+Database file is created at project root: `navapp.db`
+
+### Environment Variables (Optional)
+```bash
+export SECRET_KEY="your-secret-key-here"
+```
+
+### Connection Pool
+```python
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    pool_size=10,
+    max_overflow=20,
+    pool_pre_ping=True,
+    pool_recycle=3600
+)
+```
+
+## 📝 Development Guide
+
+### Adding a New Tool
+
+1. Create a tool file in `templates/tools/`:
+```javascript
+(function() {
+    const tool = {
+        id: 'mytool',
+        name: 'My Tool',
+        icon: '🔧',
+        render(container) {
+            container.innerHTML = `<div class="tool-container">...</div>`;
+        },
+        init(container) {
+            // initialization
+        }
+    };
+    ToolsRegistry.register(tool);
+})();
+```
+
+2. Register it in `tools-core.js`:
+```javascript
+standaloneTools: [
+    { id: 'mytool', name: 'My Tool', icon: '🔧' }
+]
+```
+
+### Adding a New API Route
+
+1. Create a route file in `app/routers/`
+2. Register it in `app/main.py`
+
+## 🐛 Known Issues
+
+None at this time.
+
+## 📄 Changelog
+
+### v2.4 (2026-05-08) - Latest
+- ✨ Dark mode (all pages, CSS variables, localStorage)
+- ✨ Link search/filter (cross-category title & URL search)
+- ✨ Import/Export bookmarks (JSON & HTML format)
+- ✨ Link health check (detect and mark broken links)
+- ✨ Favicon local cache (fix 60% icons not displaying)
+
+### v2.3 (2026-05-06)
+- 🔒 Frontend token expiry check
+- 🔧 Text diff tool memory limit (MAX_COMPARE_LINES)
+- 💾 Database connection pool optimization
+- 🐛 Fix tool module loading retry
+- 🐛 Fix XSS risk (HTML escaping)
+
+### v2.2 (2026-04-26)
+- ✨ Tool modular refactor (10 independent files)
+- ✨ Text diff, Chmod, QR code tools
+- 🔒 Frontend token expiry check
+- 🐛 Fix XSS risk
+- ⚡ Lazy loading + retry mechanism
+- 💾 Connection pool optimization
+
+### v2.1 (2026-04-xx)
+- ✨ Encode/Decode, Text stats tools
+- 🔒 JWT auth system
+
+### v2.0 (2026-03-xx)
+- ✨ Initial release
+
+---
+
+## 🤝 Contributing
+
+Issues and Pull Requests are welcome!
+
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+MIT License
+
+## 👨‍💻 Author
+
+zjr & Qwen3.5 Plus & deepseek-v4-flash
+
+## 🙏 Acknowledgements
+
+Thanks to these open-source projects:
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [CryptoJS](https://github.com/brix/crypto-js)
+- [QRCode.js](https://github.com/davidshimjs/qrcodejs)
+
+</div>
+
+<style>
+.lang-tabs { margin: 20px 0; }
+.lang-tabs label {
+  display: inline-block;
+  padding: 8px 24px;
+  margin: 0 4px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  background: #f5f5f5;
+  color: #666;
+  transition: all 0.2s;
+}
+.lang-tabs label:hover { background: #e8e8e8; }
+#lang-zh:checked ~ .lang-tabs label[for="lang-zh"],
+#lang-en:checked ~ .lang-tabs label[for="lang-en"] {
+  background: #4a90d9;
+  color: white;
+  border-color: #4a90d9;
+}
+#content-en { display: none; }
+#lang-en:checked ~ #content-en { display: block; }
+#lang-en:checked ~ #content-zh { display: none; }
+</style>
